@@ -15,13 +15,14 @@ df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_
 # see https://plotly.com/python/px-arguments/ for more options
 # df['X'] = df['X'].astype('float64')
 # df['Y'] = df['Y'].astype('float64')
-print(0.034000001 * 98)
-print(0.690999985 * 100)
+# print(0.034000001 * 98)
+# print(0.690999985 * 100)
 df['X'] = ((df['X']) * 100)
 df['Y'] = ((df['Y']) * 100)
-print(df.iloc[[5042]])
+# print(df.iloc[[5042]])
 # df = df.iloc[[1583]]
 available_players = df['player'].unique()
+help = df['result'].unique()
 """
 fig = px.scatter(df, x="X", y="Y", hover_name="player", hover_data=["result", "situation", 'player_assisted'])
 #fig = px.scatter(x=0.034000001 * 100, y=0.007212541 * 100)
@@ -63,30 +64,50 @@ app.layout = html.Div(children=[
     )
 ])
 """
-
+all = df['result'].unique()
+options = [{'label': x, 'value': x} for x in all]
+options.append({'label': 'Select All', 'value': "all"})
+# print(all)
 app.layout = html.Div([
     html.Div([
 
         html.Div([
             dcc.Dropdown(
                 df['player'].unique(),
-                'Bukayo Saka',
-                id='player'
+                'Hakim Ziyech',
+                id='player',
             ),
+        ], style={'width': '48%', 'display': 'inline-block'}),
+
+        html.Div([
+            dcc.Dropdown(
+                id='choice',
+                #options=[{'label': x, 'value': x} for x in all] + [{'label': 'Select all', 'value': 'all_values'}],
+                options=[{'label': 'Select all', 'value': 'all_values'}] + [{'label': x, 'value': x} for x in all],
+                value='all_values',
+            )
         ], style={'width': '48%', 'display': 'inline-block'}),
     ]),
 
-    dcc.Graph(id='shot-map'),
+    dcc.Graph(id='shot-map')
 ])
 
 
 @app.callback(
     Output('shot-map', 'figure'),
-    Input('player', 'value'))
-def update_graph(player):
+    Input('player', 'value'),
+    Input('choice', 'value'))
+def update_graph(player, choice):
     dff = df[df['player'] == player]
+    # Data frame with all the players data including shot data
+    if choice == 'all_values':
+        dff = df[df['player'] == player]
+        print(dff)
 
-    fig = px.scatter(dff, x="X", y="Y", color='result',size='xG', size_max=25,  hover_name="player", hover_data=[
+    else:
+        dff = dff[dff['result'] == choice]
+
+    fig = px.scatter(dff, x="X", y="Y", color='result', size='xG', size_max=25, hover_name="player", hover_data=[
         "result", "situation", 'player_assisted'])
 
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
