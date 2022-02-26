@@ -17,3 +17,7 @@ pytz==2021.3
 six==1.16.0
 tenacity==8.0.1
 Werkzeug==2.0.3
+
+matplotlib~=3.5.1
+mplsoccer~=1.0.5
+Pillow~=9.0.1
