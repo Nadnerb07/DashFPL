@@ -9,17 +9,23 @@ import pandas as pd
 from PIL import Image
 import dash_bootstrap_components as dbc
 from data_extraction import getPlayer, get_gameweek_history
+from dash.dependencies import Input, Output, State
+import base64
 
+test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
+test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
 pyLogo = Image.open("/Users/brendanbaker/DashFPL/Screenshot 2022-03-01 at 19.12.20.png")
+
+test_png1 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 17.53.34.png'
+test1_base64 = base64.b64encode(open(test_png1, 'rb').read()).decode('ascii')
+
+nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 meta_tags=[{'name': 'viewport',
                             'content': 'width=device-width, initial-scale=1.0'}]
                 )
 pd.set_option('display.max_columns', 500)
-
-
-
 
 df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
 pdff = getPlayer()
@@ -44,7 +50,7 @@ final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
-app.layout = dbc.Container([
+"""app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(html.H1("FPL Dashboard",
                         # text centered, text blue, mb-4 padding underneath title
@@ -114,6 +120,192 @@ app.layout = dbc.Container([
         ], width={'size': 10, "offset": 1, 'order': 0}),
     ])
 ], fluid=True)
+"""
+dropdown = dbc.DropdownMenu(
+    children=[
+        dbc.DropdownMenuItem("LinkedIn", href='https://www.linkedin.com/in/brendan-b-249996191/'),
+        dbc.DropdownMenuItem(divider=True),
+        dbc.DropdownMenuItem("Github", href='https://github.com/Nadnerb07'),
+    ],
+    nav=True,
+    in_navbar=True,
+    label="Important Links",
+)
+DropdownApp = dbc.Container([
+    dbc.Row([
+        dbc.Col(dcc.Dropdown(df['player'].unique(), id='player', ),
+                width={'size': 4, "offset": 1, 'order': 0}
+                ),
+
+        dbc.Col(dcc.Dropdown(id='choice', value='all_values',
+                             options=[{'label': 'Select all', 'value': 'all_values'}] + [{'label': x, 'value': x} for x
+                                                                                         in all]),
+                width={'size': 4, "offset": 1, 'order': 1}
+                ),
+    ]),
+    dbc.Row([
+
+        dbc.Col(dcc.Graph(id='shot-map', figure={}, config={'displaylogo': False, 'displayModeBar': False}),
+                width=10, lg={'size': 10, "offset": 1, 'order': 'first'}, style={'paper_bgcolor': 'rgb(0,0,0,0)'},
+                ),
+    ]),
+])
+
+DropdownApp1 = dbc.Container([
+    dbc.Row([
+        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player1', value='Ziyech'),
+                width={'size': 4, "offset": 0, 'order': 2}
+                ),
+        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player2', value='Ronaldo'),
+                width={'size': 4, "offset": 1, 'order': 2}
+                ),
+    ]),
+    dbc.Row([
+
+        dbc.Col(dcc.Graph(id='lc', figure={}, config={'displaylogo': False, 'displayModeBar': False}),
+                width=12, lg={'size': 12, "offset": 0, 'order': 'second'}),
+    ]),
+])
+cardOne = dbc.Card(
+    [
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test_base64), style={'height': '60%', 'width': '100%'},
+                    top=True),
+        dbc.CardBody(
+            [
+                html.H4("League Shot Map", className="card-title"),
+                html.P(
+                    "An interactive shot map capable of visualising every players shot outcome in the league, "
+                    "use widgets to filter and hover over a shot to view further dimensions.",
+                    className="card-text",
+                ),
+                dbc.Button("Open App", id="open", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader("Player's Shot Outcome"),
+                        dbc.ModalBody(DropdownApp),
+                        dbc.ModalFooter(
+                            dbc.Button("Close", id="close", className="ml-auto")
+                        ),
+                    ],
+                    id="modal",
+                    size="lg",
+                    style={'color': 'plotly_dark'},
+                ),
+            ]
+        ),
+    ],
+    style={"width": "20rem", 'height': '40rem'},
+)
+
+cardTwo = dbc.Card(
+    [
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64), style={'height': '100%', 'width': '100%', "opacity": 0.35},
+                    top=True),
+
+        dbc.CardImgOverlay(
+            dbc.CardBody(
+                [
+                    html.H4("Gameweek performance", className="card-title"),
+                    html.P(
+                        "A interactive line-chart showcasing game-week timeseries data in correlation with total points",
+                        className="card-text",
+                    ),
+                    dbc.Button("Open App", id="opentwo", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader("Player Gameweek Performance"),
+                            dbc.ModalBody(DropdownApp1),
+                            dbc.ModalFooter(
+                                dbc.Button("Close", id="closetwo", className="ml-auto")
+                            ),
+                        ],
+                        id="modaltwo",
+                        size="lg",
+                        style={'color': 'plotly_dark'},
+                    ),
+                ]
+            ),
+        ),
+    ],
+    style={"width": "25rem", 'height': '15rem'},
+)
+"""Body"""
+# rows
+col1 = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(html.Div(cardOne))
+            ],
+            style={'margin': 'auto', 'width': '80vw'}
+        ),
+    ]
+)
+
+col2 = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(html.Div(cardTwo))
+            ],
+            style={'margin': 'auto', 'width': '80vw'}
+        ),
+    ]
+)
+
+navbar = dbc.Navbar(
+    dbc.Container(
+        [
+            html.A(
+                # Use row and col to control vertical alignment of logo / brand
+                dbc.Row(
+                    [
+                        dbc.Col(dbc.NavbarBrand("Fantasy Premier League Visualisations", className="ml-2")),
+                    ],
+                    align="center",
+                    no_gutters=True,
+                ),
+                # href="https://plot.ly",
+            ),
+            dbc.NavbarToggler(id="navbar-toggler2"),
+            dbc.Collapse(
+                dbc.Nav(
+                    [nav_item,
+                     dropdown,
+                     ], className="ml-auto", navbar=True
+                ),
+                id="navbar-collapse2",
+                navbar=True,
+            ),
+        ]
+    ),
+    color="dark",
+    dark=True,
+    className="mb-4",
+)
+#####################################################################################
+
+"""Layout"""
+
+app.layout = html.Div([
+    dbc.Row(dbc.Col(navbar, width=12)),
+    dbc.Row([
+        dbc.Col(col1, width=3),
+        dbc.Col(col2, width=3),
+    ]),
+])
+width = {'offset': 0}
+@app.callback(
+    Output("modal", "is_open"),
+    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
 
 @app.callback(
     Output('lc', 'figure'),
@@ -159,7 +351,7 @@ def update_graph(player, choice):
                      hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False, 'Y': False}
                      , size='xG')
 
-    fig.update_layout(margin={'l': 0, 'b': 0, 't': 20, 'r': 0}, hovermode='closest',)
+    fig.update_layout(margin={'l': 0, 'b': 0, 't': 0, 'r': 0}, hovermode='closest')
 
     # fig.update_layout(template="simple_white", width=1070, height=711,
     # xaxis_showgrid=False, yaxis_showgrid=False)
@@ -192,9 +384,19 @@ def update_graph(player, choice):
         y=1.02,
         xanchor="right",
         x=1,
+        # bgcolor='rgb(0,0,0,0)',
     ))
     return fig
 
+@app.callback(
+    Output("modaltwo", "is_open"),
+    [Input("opentwo", "n_clicks"), Input("closetwo", "n_clicks")],
+    [State("modaltwo", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 if __name__ == '__main__':
     app.run_server(debug=True)
