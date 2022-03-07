@@ -70,4 +70,4 @@ def get_gameweek_history(player_id):
 
 
 apitest()"""
-# print(get_gameweek_history(200))
+print(get_gameweek_history(200))

@@ -11,6 +11,10 @@ import dash_bootstrap_components as dbc
 from data_extraction import getPlayer, get_gameweek_history
 from dash.dependencies import Input, Output, State
 import base64
+import plotly.graph_objects as go
+
+yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
+rdf = pd.DataFrame(yo)
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -19,6 +23,8 @@ pyLogo = Image.open("/Users/brendanbaker/DashFPL/Screenshot 2022-03-01 at 19.12.
 test_png1 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 17.53.34.png'
 test1_base64 = base64.b64encode(open(test_png1, 'rb').read()).decode('ascii')
 
+test_png2 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-07 at 11.11.36.png'
+test2_base64 = base64.b64encode(open(test_png2, 'rb').read()).decode('ascii')
 nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -26,7 +32,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
                             'content': 'width=device-width, initial-scale=1.0'}]
                 )
 pd.set_option('display.max_columns', 500)
-
+data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
 df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
 pdff = getPlayer()
 # see https://plotly.com/python/px-arguments/ for more options
@@ -44,7 +50,7 @@ pdf = pdff[['web_name', 'status', 'total_points', 'goals_scored', 'assists', 'mi
 
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
-print(type(pdf['selected_by_percent'][0]))
+# print(type(pdf['selected_by_percent'][0]))
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 all = df['result'].unique()
@@ -166,6 +172,22 @@ DropdownApp1 = dbc.Container([
                 width=12, lg={'size': 12, "offset": 0, 'order': 'second'}),
     ]),
 ])
+
+DropdownApp2 = dbc.Container([
+    dbc.Row([
+        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='firstPlayer', value='Bukayo Saka'),
+                width={'size': 4, "offset": 0, 'order': 2}
+                ),
+        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='secondPlayer', value='Reece James'),
+                width={'size': 4, "offset": 1, 'order': 2}
+                ),
+    ]),
+    dbc.Row([
+
+        dbc.Col(dcc.Graph(id='radar', figure={}, config={'displaylogo': False, 'displayModeBar': False}),
+                width=12, lg={'size': 12, "offset": 0, 'order': 'second'}),
+    ]),
+])
 cardOne = dbc.Card(
     [
         dbc.CardImg(src='data:assets/png;base64,{}'.format(test_base64), style={'height': '60%', 'width': '100%'},
@@ -199,7 +221,8 @@ cardOne = dbc.Card(
 
 cardTwo = dbc.Card(
     [
-        dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64), style={'height': '100%', 'width': '100%', "opacity": 0.35},
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64),
+                    style={'height': '100%', 'width': '100%', "opacity": 0.35},
                     top=True),
 
         dbc.CardImgOverlay(
@@ -227,7 +250,40 @@ cardTwo = dbc.Card(
             ),
         ),
     ],
-    style={"width": "25rem", 'height': '15rem'},
+    style={"width": "22rem", 'height': '15rem'},
+)
+
+cardThree = dbc.Card(
+    [
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test2_base64), style={'height': '100%', 'width': '100%'},
+                    bottom=True),
+
+        dbc.CardImgOverlay(
+            dbc.CardBody(
+                [
+                    html.H4("Gameweek performance", className="card-title"),
+                    html.P(
+                        "A interactive line-chart showcasing game-week timeseries data in correlation with total points",
+                        className="card-text",
+                    ),
+                    dbc.Button("Open App", id="open3", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader("Player Gameweek Performance"),
+                            dbc.ModalBody(DropdownApp2),
+                            dbc.ModalFooter(
+                                dbc.Button("Close", id="close3", className="ml-auto")
+                            ),
+                        ],
+                        id="modal3",
+                        size="lg",
+                        style={'color': 'plotly_dark'},
+                    ),
+                ]
+            ),
+        ),
+    ],
+    style={"width": "22rem", 'height': '25rem'},
 )
 """Body"""
 # rows
@@ -250,6 +306,14 @@ col2 = html.Div(
             ],
             style={'margin': 'auto', 'width': '80vw'}
         ),
+    ]
+)
+
+col3 = html.Div(
+    [
+        dbc.Row(dbc.Col(html.Div(cardThree)),
+                style={'margin': 'auto', 'width': '80vw'}
+                ),
     ]
 )
 
@@ -287,14 +351,37 @@ navbar = dbc.Navbar(
 
 """Layout"""
 
+"""app.layout = html.Div([
+    dbc.Row(dbc.Col(navbar, width=12)),
+    dbc.Row([
+        dbc.Col(col1, width={'size': 3, "offset": 0, 'order': 0}),
+        dbc.Col(col2, width={'size': 3, "offset": 0, 'order': 1}),
+    ])
+
+])
+width = {'offset': 0}
+"""
+
 app.layout = html.Div([
     dbc.Row(dbc.Col(navbar, width=12)),
     dbc.Row([
-        dbc.Col(col1, width=3),
-        dbc.Col(col2, width=3),
-    ]),
+        dbc.Col(col1, width={'size': 3, "offset": 0, 'order': 0}),
+        dbc.Col(
+            [
+                dbc.Row(
+                    dbc.Col(cardTwo),
+                    no_gutters=False, className="g-1"),
+
+                dbc.Row(
+                    dbc.Col(cardThree),
+                    className="g-1"
+                )
+            ], width={'size': 3, "offset": 0, 'order': 0}),
+        #dbc.Col(col3, width={'size': 3, "offset": 0, 'order': 0}, style={'border': '1px solid'})
+    ], className="g-1")
+
 ])
-width = {'offset': 0}
+
 @app.callback(
     Output("modal", "is_open"),
     [Input("open", "n_clicks"), Input("close", "n_clicks")],
@@ -306,7 +393,6 @@ def toggle_modal(n1, n2, is_open):
     return is_open
 
 
-
 @app.callback(
     Output('lc', 'figure'),
     Input('player1', 'value'),
@@ -314,18 +400,18 @@ def toggle_modal(n1, n2, is_open):
 )
 def lineChart(player1, player2):
     df1 = final_pdf[final_pdf['web_name'] == player1]
-    df2 = final_pdf[final_pdf['web_name'] == player2]
-    #print(dff)
+    # df2 = final_pdf[final_pdf['web_name'] == player2]
+    # print(dff)
     id_1 = df1['id'].iloc[0]
-    id_2 = df2['id'].iloc[0]
+    # id_2 = df2['id'].iloc[0]
     int_id_1 = int(id_1)
-    int_id_2 = int(id_2)
+    # int_id_2 = int(id_2)
 
     gwdf1 = get_gameweek_history(int_id_1)
-    gwdf2 = get_gameweek_history(int_id_2)
+    # gwdf2 = get_gameweek_history(int_id_2)
 
     gwdf1.loc[gwdf1['minutes'] == 0, 'total_points'] = None
-    gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
+    # gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
 
     fig = px.line(gwdf1, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
     fig.update_traces(connectgaps=False)
@@ -388,6 +474,7 @@ def update_graph(player, choice):
     ))
     return fig
 
+
 @app.callback(
     Output("modaltwo", "is_open"),
     [Input("opentwo", "n_clicks"), Input("closetwo", "n_clicks")],
@@ -397,6 +484,88 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
+
+
+@app.callback(
+    Output("modal3", "is_open"),
+    [Input("open3", "n_clicks"), Input("close3", "n_clicks")],
+    [State("modal3", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+@app.callback(
+    Output('radar', 'figure'),
+    Input('firstPlayer', 'value'),
+    Input('secondPlayer', 'value'))
+def radar_function(firstPlayer, secondPayer):
+    # scatterpolar
+    df1_for_plot = pd.DataFrame(rdf[rdf['player_name'] == firstPlayer][data].iloc[0])
+    df2_for_plot = pd.DataFrame(rdf[rdf['player_name'] == secondPayer][data].iloc[0])
+    # print(df1_for_plot)
+    df1_for_plot.columns = ['score']
+    df2_for_plot.columns = ['score']
+    # print(df1_for_plot)
+    list_scores = [df1_for_plot.index[i] + ' = ' + str(df1_for_plot['score'][i]) for i in
+                   range(len(df1_for_plot))]
+    text_scores_1 = firstPlayer
+    for i in list_scores:
+        text_scores_1 += '<br>' + i
+
+    list_scores = [df2_for_plot.index[i] + ' = ' + str(df2_for_plot['score'][i]) for i in
+                   range(len(df2_for_plot))]
+    text_scores_2 = secondPayer
+    for i in list_scores:
+        text_scores_2 += '<br>' + i
+    # print(text_scores_1[0])
+    fig = go.Figure(data=go.Scatterpolar(
+        r=df1_for_plot['score'],
+        theta=df1_for_plot.index,
+        fill='toself',
+        # marker_color='yellow',
+        # opacity=0.7,
+        hoverinfo="text",
+        name=(firstPlayer + ' ' + str(rdf[rdf['player_name'] == firstPlayer]['time'].iloc[0]) + 'mp'),
+        text=[df1_for_plot.index[i] + ' = ' + str(df1_for_plot['score'][i]) for i in range(len(df1_for_plot))]
+    ))
+
+    fig.add_trace(go.Scatterpolar(
+        r=df2_for_plot['score'],
+        theta=df2_for_plot.index,
+        fill='toself',
+        # marker_color='mediumvioletred',
+        hoverinfo="text",
+        # opacity=1,
+        name=(secondPayer + ' ' + str(rdf[rdf['player_name'] == secondPayer]['time'].iloc[0]) + 'mp'),
+        text=[df2_for_plot.index[i] + ' = ' + str(df2_for_plot['score'][i]) for i in range(len(df2_for_plot))]
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            # hole=0.1,
+            bgcolor="grey",
+            radialaxis=dict(
+                visible=True,
+                # type='linear',
+                # autotypenumbers='strict',
+                # autorange=False,
+                # range=[30, 100],
+                # angle=90,
+                showline=False,
+                showticklabels=False, ticks='',
+                gridcolor='yellow'),
+        ),
+        width=800,
+        height=800,
+        plot_bgcolor='rgba(0, 0, 0, 0)',
+        paper_bgcolor='rgba(0, 0, 0, 0)',
+
+    )
+    return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
