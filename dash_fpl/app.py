@@ -12,7 +12,15 @@ from data_extraction import getPlayer, get_gameweek_history
 from dash.dependencies import Input, Output, State
 import base64
 import plotly.graph_objects as go
+import psycopg2
+import os
 
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
+                meta_tags=[{'name': 'viewport',
+                            'content': 'width=device-width, initial-scale=1'}]
+                )
+
+server = app.server
 yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
 rdf = pd.DataFrame(yo)
 
@@ -27,13 +35,20 @@ test_png2 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-07 at 11.11.3
 test2_base64 = base64.b64encode(open(test_png2, 'rb').read()).decode('ascii')
 nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
-                meta_tags=[{'name': 'viewport',
-                            'content': 'width=device-width, initial-scale=1.0'}]
-                )
 pd.set_option('display.max_columns', 500)
 data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
-df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
+# df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
+from flask_sqlalchemy import SQLAlchemy
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config[
+    "SQLALCHEMY_DATABASE_URI"] = 'postgres://urkpevxbabiclm:c79af97a200c1d2b2cdfd414bef831c99ba912b47114729cb40112df881a06e1@ec2-54-228-97-176.eu-west-1.compute.amazonaws.com:5432/d2mfj1fquud6o8'
+db = SQLAlchemy(app)
+
+# engine = create_engine('postgresql://postgres:jedi1999@localhost:5432/data')
+df = pd.read_sql_table('shot_data', db)
+# df.to_sql('shot_data', engine)
+
 pdff = getPlayer()
 # see https://plotly.com/python/px-arguments/ for more options
 # df['X'] = df['X'].astype('float64')
@@ -255,35 +270,35 @@ cardTwo = dbc.Card(
 
 cardThree = dbc.Card(
     [
-        dbc.CardImg(src='data:assets/png;base64,{}'.format(test2_base64), style={'height': '100%', 'width': '100%'},
-                    bottom=True),
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test2_base64), style={'height': '60%', 'width': '100%'},
+                    top=True),
 
-        dbc.CardImgOverlay(
-            dbc.CardBody(
-                [
-                    html.H4("Gameweek performance", className="card-title"),
-                    html.P(
-                        "A interactive line-chart showcasing game-week timeseries data in correlation with total points",
-                        className="card-text",
-                    ),
-                    dbc.Button("Open App", id="open3", color='warning', style={'margin': 'auto', 'width': '100%'}),
-                    dbc.Modal(
-                        [
-                            dbc.ModalHeader("Player Gameweek Performance"),
-                            dbc.ModalBody(DropdownApp2),
-                            dbc.ModalFooter(
-                                dbc.Button("Close", id="close3", className="ml-auto")
-                            ),
-                        ],
-                        id="modal3",
-                        size="lg",
-                        style={'color': 'plotly_dark'},
-                    ),
-                ]
-            ),
+        dbc.CardBody(
+            [
+                html.H4("Radar Analysis", className="card-title"),
+                html.P(
+                    "Radar Chart allowing player comparison across multiple variables including xG, xA, npxG, "
+                    "xGChain, xGBuildup, npg. Pick any player in the league and begin exploring.",
+                    className="card-text",
+                ),
+                dbc.Button("Open App", id="open3", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader("Player Gameweek Performance"),
+                        dbc.ModalBody(DropdownApp2),
+                        dbc.ModalFooter(
+                            dbc.Button("Close", id="close3", className="ml-auto")
+                        ),
+                    ],
+                    id="modal3",
+                    size="lg",
+                    style={'color': 'plotly_dark'},
+                ),
+            ]
         ),
+
     ],
-    style={"width": "22rem", 'height': '25rem'},
+    style={"width": "20rem", 'height': '40rem'},
 )
 """Body"""
 # rows
@@ -361,27 +376,27 @@ navbar = dbc.Navbar(
 ])
 width = {'offset': 0}
 """
-
+# html.div
 app.layout = html.Div([
     dbc.Row(dbc.Col(navbar, width=12)),
     dbc.Row([
-        dbc.Col(col1, width={'size': 3, "offset": 0, 'order': 0}),
+        dbc.Col(col1, xs=12, sm=12, md=6, lg=3, ),
+        dbc.Col(col3, xs=12, sm=12, md=6, lg=3),
         dbc.Col(
             [
                 dbc.Row(
-                    dbc.Col(cardTwo),
-                    no_gutters=False, className="g-1"),
+                    dbc.Col(cardTwo)),
 
-                dbc.Row(
-                    dbc.Col(cardThree),
-                    className="g-1"
-                )
+                # dbc.Row(
+                # dbc.Col(cardThree))
             ], width={'size': 3, "offset": 0, 'order': 0}),
-        #dbc.Col(col3, width={'size': 3, "offset": 0, 'order': 0}, style={'border': '1px solid'})
-    ], className="g-1")
+        # dbc.Col(col3, width={'size': 3, "offset": 0, 'order': 0}, style={'border': '1px solid'})
+    ], )
 
-])
+], )
 
+
+# remove fuild
 @app.callback(
     Output("modal", "is_open"),
     [Input("open", "n_clicks"), Input("close", "n_clicks")],
@@ -393,6 +408,19 @@ def toggle_modal(n1, n2, is_open):
     return is_open
 
 
+"""
+    fig = px.line(gwdf1, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'],
+                  )
+
+    fig.update_traces(connectgaps=False)
+    fig.add_scatter(x=gwdf2['round'], y=gwdf2['total_points'], mode='lines', hovertext=gwdf2['total_points'],
+                    hoverinfo="text", name=player2)
+
+    return fig
+
+"""
+
+
 @app.callback(
     Output('lc', 'figure'),
     Input('player1', 'value'),
@@ -400,23 +428,42 @@ def toggle_modal(n1, n2, is_open):
 )
 def lineChart(player1, player2):
     df1 = final_pdf[final_pdf['web_name'] == player1]
-    # df2 = final_pdf[final_pdf['web_name'] == player2]
+    df2 = final_pdf[final_pdf['web_name'] == player2]
     # print(dff)
     id_1 = df1['id'].iloc[0]
-    # id_2 = df2['id'].iloc[0]
+    id_2 = df2['id'].iloc[0]
     int_id_1 = int(id_1)
-    # int_id_2 = int(id_2)
+    int_id_2 = int(id_2)
 
     gwdf1 = get_gameweek_history(int_id_1)
-    # gwdf2 = get_gameweek_history(int_id_2)
+    gwdf2 = get_gameweek_history(int_id_2)
 
     gwdf1.loc[gwdf1['minutes'] == 0, 'total_points'] = None
-    # gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
+    gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
 
     fig = px.line(gwdf1, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
+    fig.update_traces(line_color='blue')
     fig.update_traces(connectgaps=False)
 
-    return fig
+    fig2 = px.line(gwdf2, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
+    fig.update_traces(connectgaps=False)
+    fig2.update_traces(line_color='orange')
+    fig3 = go.Figure(data=fig.data + fig2.data)
+
+    fig3.update_layout(
+        title="Gameweek Payer Data",
+        xaxis_title="Gameweek",
+        yaxis_title="Points",
+        legend_title="Player",
+
+        font=dict(
+            family="Courier New, monospace",
+            size=18,
+            color="RebeccaPurple"
+        )
+    )
+
+    return fig3
 
 
 @app.callback(
