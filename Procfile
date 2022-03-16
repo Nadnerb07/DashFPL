@@ -1,1 +1,1 @@
-web: gunicorn dashfpl-app:server
+web:gunicorn app:app
