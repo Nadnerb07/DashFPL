@@ -14,15 +14,54 @@ import base64
 import plotly.graph_objects as go
 import psycopg2
 import os
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from flask import Flask
 
+server = Flask(__name__)
+app = dash.Dash(__name__, server=server, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
+                meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}]
+                )
+
+app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.server.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://postgres:jedi1999@localhost:5432/data'
+db = SQLAlchemy(app.server)
+
+df = pd.read_sql_table('shot_data', con=db.engine)
+#radar_data = pd.read_sql_table('radar_data', con=db.engine)
+
+#rdf = pd.DataFrame(radar_data)
+
+tabs_styles = {
+    'height': '44px'
+}
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
+
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#119DFF',
+    'color': 'white',
+    'padding': '6px'
+}
+"""
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 meta_tags=[{'name': 'viewport',
                             'content': 'width=device-width, initial-scale=1'}]
                 )
+"""
 
-server = app.server
-yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
+#yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
+#rdf = pd.DataFrame(yo)
+
+yo = pd.read_sql_table('radar_data', con=db.engine)
+
 rdf = pd.DataFrame(yo)
+print(rdf.info())
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -35,18 +74,15 @@ test_png2 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-07 at 11.11.3
 test2_base64 = base64.b64encode(open(test_png2, 'rb').read()).decode('ascii')
 nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
+
 pd.set_option('display.max_columns', 500)
 data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
 # df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
-from flask_sqlalchemy import SQLAlchemy
 
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config[
-    "SQLALCHEMY_DATABASE_URI"] = 'postgres://urkpevxbabiclm:c79af97a200c1d2b2cdfd414bef831c99ba912b47114729cb40112df881a06e1@ec2-54-228-97-176.eu-west-1.compute.amazonaws.com:5432/d2mfj1fquud6o8'
-db = SQLAlchemy(app)
 
 # engine = create_engine('postgresql://postgres:jedi1999@localhost:5432/data')
-df = pd.read_sql_table('shot_data', db)
+#df = pd.read_sql_table('shot_data', con=db.engine)
+
 # df.to_sql('shot_data', engine)
 
 pdff = getPlayer()
@@ -55,8 +91,8 @@ pdff = getPlayer()
 # df['Y'] = df['Y'].astype('float64')
 # print(0.034000001 * 98)
 # print(0.690999985 * 100)
-df['X'] = ((df['X']) * 100)
-df['Y'] = ((df['Y']) * 100)
+#df['X'] = ((df['X']) * 100)
+#df['Y'] = ((df['Y']) * 100)
 # print(df.iloc[[5042]])
 # df = df.iloc[[1583]]
 # del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
@@ -71,6 +107,7 @@ final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
+print(df.dtypes)
 """app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(html.H1("FPL Dashboard",
@@ -205,7 +242,7 @@ DropdownApp2 = dbc.Container([
 ])
 cardOne = dbc.Card(
     [
-        dbc.CardImg(src='data:assets/png;base64,{}'.format(test_base64), style={'height': '60%', 'width': '100%'},
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test_base64), style={'height': '100%', 'width': '100%'},
                     top=True),
         dbc.CardBody(
             [
@@ -215,7 +252,7 @@ cardOne = dbc.Card(
                     "use widgets to filter and hover over a shot to view further dimensions.",
                     className="card-text",
                 ),
-                dbc.Button("Open App", id="open", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                dbc.Button("Open App", id="open", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
                 dbc.Modal(
                     [
                         dbc.ModalHeader("Player's Shot Outcome"),
@@ -231,13 +268,13 @@ cardOne = dbc.Card(
             ]
         ),
     ],
-    style={"width": "20rem", 'height': '40rem'},
+    style={"width": "100%", 'height': '100%'},
 )
 
 cardTwo = dbc.Card(
     [
         dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64),
-                    style={'height': '100%', 'width': '100%', "opacity": 0.35},
+                    #style={'height': '100%', 'width': '100%', "opacity": 0.35},
                     top=True),
 
         dbc.CardImgOverlay(
@@ -248,7 +285,7 @@ cardTwo = dbc.Card(
                         "A interactive line-chart showcasing game-week timeseries data in correlation with total points",
                         className="card-text",
                     ),
-                    dbc.Button("Open App", id="opentwo", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                    dbc.Button("Open App", id="opentwo", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
                     dbc.Modal(
                         [
                             dbc.ModalHeader("Player Gameweek Performance"),
@@ -265,12 +302,12 @@ cardTwo = dbc.Card(
             ),
         ),
     ],
-    style={"width": "22rem", 'height': '15rem'},
+    #style={"width": "22rem", 'height': '15rem'},
 )
 
 cardThree = dbc.Card(
     [
-        dbc.CardImg(src='data:assets/png;base64,{}'.format(test2_base64), style={'height': '60%', 'width': '100%'},
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(test2_base64), style={'height': '100%', 'width': '100%'},
                     top=True),
 
         dbc.CardBody(
@@ -281,7 +318,7 @@ cardThree = dbc.Card(
                     "xGChain, xGBuildup, npg. Pick any player in the league and begin exploring.",
                     className="card-text",
                 ),
-                dbc.Button("Open App", id="open3", color='warning', style={'margin': 'auto', 'width': '100%'}),
+                dbc.Button("Open App", id="open3", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
                 dbc.Modal(
                     [
                         dbc.ModalHeader("Player Gameweek Performance"),
@@ -298,7 +335,7 @@ cardThree = dbc.Card(
         ),
 
     ],
-    style={"width": "20rem", 'height': '40rem'},
+    style={"width": "100%", 'height': '100%'},
 )
 """Body"""
 # rows
@@ -306,7 +343,7 @@ col1 = html.Div(
     [
         dbc.Row(
             [
-                dbc.Col(html.Div(cardOne))
+                dbc.Col(html.Div(cardOne), xs=12, sm=12, md=6, lg=3)
             ],
             style={'margin': 'auto', 'width': '80vw'}
         ),
@@ -342,7 +379,8 @@ navbar = dbc.Navbar(
                         dbc.Col(dbc.NavbarBrand("Fantasy Premier League Visualisations", className="ml-2")),
                     ],
                     align="center",
-                    no_gutters=True,
+                    #no_gutters=True,
+
                 ),
                 # href="https://plot.ly",
             ),
@@ -360,7 +398,7 @@ navbar = dbc.Navbar(
     ),
     color="dark",
     dark=True,
-    className="mb-4",
+    #className="mb-4",
 )
 #####################################################################################
 
@@ -377,10 +415,10 @@ navbar = dbc.Navbar(
 width = {'offset': 0}
 """
 # html.div
-app.layout = html.Div([
-    dbc.Row(dbc.Col(navbar, width=12)),
+"""viz_layout = html.Div([
+    # dbc.Row(dbc.Col(navbar, width=12)),
     dbc.Row([
-        dbc.Col(col1, xs=12, sm=12, md=6, lg=3, ),
+        dbc.Col(col1, xs=12, sm=12, md=6, lg=3),
         dbc.Col(col3, xs=12, sm=12, md=6, lg=3),
         dbc.Col(
             [
@@ -393,7 +431,55 @@ app.layout = html.Div([
         # dbc.Col(col3, width={'size': 3, "offset": 0, 'order': 0}, style={'border': '1px solid'})
     ], )
 
-], )
+], )"""
+
+viz_layout = html.Div([
+    # dbc.Row(dbc.Col(navbar, width=12)),
+    dbc.Row([dbc.Col(cardOne, xs={'size': 12,  "offset": 0}, sm={'size': 12,  "offset": 0}, md={'size': 6,  "offset": 1}, lg={'size': 3,  "offset": 1}),
+             dbc.Col(cardThree, xs=12, sm=12, md=6, lg=3),
+             dbc.Col(cardTwo, xs=12, sm=12, md=6, lg=3)]),
+
+],)
+
+"""app_tabs = html.Div(
+    [
+        dbc.Tabs(
+            [
+                dbc.Tab(label="Visualisations", tab_id="tab-visualisation", labelClassName="text-success font-weight-bold",
+                        activeLabelClassName="text-danger"),
+            ],
+            id="tabs",
+            active_tab="tab-visualisations",
+        ),
+    ], className="mt-3"
+)
+"""
+app_tabs = html.Div([
+    dcc.Tabs(id='tabs', value='tab-visualisations', children=[
+        dcc.Tab(label='Visualisations', value='tab-visualisations', style=tab_style, selected_style=tab_selected_style),
+        dcc.Tab(label='Tab 2', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+    ], style=tabs_styles),
+])
+
+app.layout = html.Div([
+    dbc.Row(dbc.Col(navbar, width=12)),
+    # html.Hr(),
+    dbc.Row(dbc.Col(app_tabs, width=12)),
+    html.Div(id='content', children=[])
+
+])
+
+
+@app.callback(
+    Output("content", "children"),
+    [Input("tabs", "value")]
+)
+def switch_tab(tab_chosen):
+    if tab_chosen == "tab-visualisations":
+        return viz_layout
+    if tab_chosen == 'tab-2':
+        return html.P("Future Tab")
+    return html.P("This shouldn't be displayed for now...")
 
 
 # remove fuild
@@ -605,8 +691,8 @@ def radar_function(firstPlayer, secondPayer):
                 showticklabels=False, ticks='',
                 gridcolor='yellow'),
         ),
-        width=800,
-        height=800,
+        #width=750,
+        #height=750,
         plot_bgcolor='rgba(0, 0, 0, 0)',
         paper_bgcolor='rgba(0, 0, 0, 0)',
 

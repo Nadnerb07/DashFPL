@@ -27,9 +27,9 @@ def gameweekHistory(element_id):
     url = f'https://fantasy.premierleague.com/api/element-summary/{element_id}/'
     r = requests.get(url)
     json = r.json()
-    print(json.keys())
+    #print(json.keys())
     json_history_df = pd.DataFrame(json['history'])
-    print(json_history_df.head())
+    #print(json_history_df.head())
 
 
 # gameweekHistory(200)
@@ -45,7 +45,7 @@ def get_gameweek_history(player_id):
     ).json()
 
     # extract 'history' data from response into dataframe
-    # print(r)
+    #print(r)
     df = pd.json_normalize(r['history'])
     # print(df.head())
     df = df[[
@@ -70,4 +70,4 @@ def get_gameweek_history(player_id):
 
 
 apitest()"""
-print(get_gameweek_history(200))
+#print(get_gameweek_history(200))
