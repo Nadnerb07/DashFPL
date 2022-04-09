@@ -30,14 +30,14 @@ async def main(shot_list, epl):
         league_teams = await understat.get_teams('epl', season)
         # Clean league team data, returns list of teams
         teams_lst = team_cleaning(league_teams)
-        print(teams_lst)
+        #print(teams_lst)
         # player_shots = await understat.get_player_shots(619)
 
         for j in range(len(teams_lst)):
             epl_players = await understat.get_team_players(teams_lst[j], season)
             epl += epl_players
-        print('Stage 1')
-        print(epl)
+        #print('Stage 1')
+        #print(epl)
         id_list = list_of_IDs(epl)
 
         for i in range(len(id_list)):
@@ -45,7 +45,7 @@ async def main(shot_list, epl):
             test += cfc_player_Sh
 
             # print(cfc_player_Sh)
-        print('Stage 2')
+        #print('Stage 2')
         # minutes = total minutes / 90
         # xG90 = xG / minutes
 
@@ -55,7 +55,7 @@ async def main(shot_list, epl):
         data = pd.DataFrame(test)
         df_rd_data = pd.DataFrame(rd_data)
         data_prep = format_shot_data(data, teams_lst)
-        print(data_prep.info())
+        #print(data_prep.info())
         # data_prep.to_sql(name='test', con=conn, if_exists='replace', index=False)
         # test = format_data(test)
         # df = pd.DataFrame(data)
@@ -127,7 +127,7 @@ def list_of_IDs(players):
     #players.to_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv', index=False)
     players.to_sql('radar_data', engine, if_exists='replace', index=False)
     id_list = players['id']
-    print(id_list)
+    #print(id_list)
     return id_list
 
 

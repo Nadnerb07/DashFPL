@@ -7,6 +7,7 @@ from dash import html, dcc, Input, Output
 import plotly.express as px
 import pandas as pd
 from PIL import Image
+import requests
 import dash_bootstrap_components as dbc
 from data_extraction import getPlayer, get_gameweek_history
 from dash.dependencies import Input, Output, State
@@ -61,7 +62,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
 yo = pd.read_sql_table('radar_data', con=db.engine)
 
 rdf = pd.DataFrame(yo)
-print(rdf.info())
+#print(rdf.info())
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -107,7 +108,7 @@ final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
-print(df.dtypes)
+#print(df.dtypes)
 """app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(html.H1("FPL Dashboard",
@@ -469,6 +470,38 @@ app.layout = html.Div([
 
 ])
 
+text_input = html.Div([
+    html.H6("Change the value in the text box to see callbacks in action!"),
+    html.Div([
+        "Input: ",
+        dcc.Input(id='my-input', value='initial value', type='text')
+    ]),
+    html.Br(),
+    html.Div(id='my-output'),
+
+])
+
+
+@app.callback(
+    Output(component_id='my-output', component_property='children'),
+    Input(component_id='my-input', component_property='value')
+)
+def update_output_div(input_value):
+    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{input_value}/")
+    if manager_id.status_code == 200:
+        return f'Output: {input_value}'
+    else:
+        return f'Not Valid'
+
+"""def check_validity(text):
+    if text:
+        manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{text}/")
+        print(manager_id)
+        if manager_id.status_code == 200:
+            print(manager_id)
+            manager_id.json()
+            return manager_id, not manager_id
+    return True, False"""
 
 @app.callback(
     Output("content", "children"),
@@ -478,7 +511,7 @@ def switch_tab(tab_chosen):
     if tab_chosen == "tab-visualisations":
         return viz_layout
     if tab_chosen == 'tab-2':
-        return html.P("Future Tab")
+        return text_input
     return html.P("This shouldn't be displayed for now...")
 
 
