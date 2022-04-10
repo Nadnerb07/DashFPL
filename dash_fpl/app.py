@@ -18,6 +18,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from flask import Flask
+from captain_picks import optimal_captain
 
 server = Flask(__name__)
 app = dash.Dash(__name__, server=server, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -29,9 +30,9 @@ app.server.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://postgres:jedi1999@l
 db = SQLAlchemy(app.server)
 
 df = pd.read_sql_table('shot_data', con=db.engine)
-#radar_data = pd.read_sql_table('radar_data', con=db.engine)
+# radar_data = pd.read_sql_table('radar_data', con=db.engine)
 
-#rdf = pd.DataFrame(radar_data)
+# rdf = pd.DataFrame(radar_data)
 
 tabs_styles = {
     'height': '44px'
@@ -56,13 +57,13 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 )
 """
 
-#yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
-#rdf = pd.DataFrame(yo)
+# yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
+# rdf = pd.DataFrame(yo)
 
 yo = pd.read_sql_table('radar_data', con=db.engine)
 
 rdf = pd.DataFrame(yo)
-#print(rdf.info())
+# print(rdf.info())
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -75,14 +76,13 @@ test_png2 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-07 at 11.11.3
 test2_base64 = base64.b64encode(open(test_png2, 'rb').read()).decode('ascii')
 nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
-
 pd.set_option('display.max_columns', 500)
 data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
 # df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
 
 
 # engine = create_engine('postgresql://postgres:jedi1999@localhost:5432/data')
-#df = pd.read_sql_table('shot_data', con=db.engine)
+# df = pd.read_sql_table('shot_data', con=db.engine)
 
 # df.to_sql('shot_data', engine)
 
@@ -92,8 +92,8 @@ pdff = getPlayer()
 # df['Y'] = df['Y'].astype('float64')
 # print(0.034000001 * 98)
 # print(0.690999985 * 100)
-#df['X'] = ((df['X']) * 100)
-#df['Y'] = ((df['Y']) * 100)
+# df['X'] = ((df['X']) * 100)
+# df['Y'] = ((df['Y']) * 100)
 # print(df.iloc[[5042]])
 # df = df.iloc[[1583]]
 # del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
@@ -108,7 +108,7 @@ final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
-#print(df.dtypes)
+# print(df.dtypes)
 """app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(html.H1("FPL Dashboard",
@@ -253,7 +253,7 @@ cardOne = dbc.Card(
                     "use widgets to filter and hover over a shot to view further dimensions.",
                     className="card-text",
                 ),
-                dbc.Button("Open App", id="open", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
+                dbc.Button("Open App", id="open", color='warning'),  # style={'margin': 'auto', 'width': '100%'}),
                 dbc.Modal(
                     [
                         dbc.ModalHeader("Player's Shot Outcome"),
@@ -275,7 +275,7 @@ cardOne = dbc.Card(
 cardTwo = dbc.Card(
     [
         dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64),
-                    #style={'height': '100%', 'width': '100%', "opacity": 0.35},
+                    # style={'height': '100%', 'width': '100%', "opacity": 0.35},
                     top=True),
 
         dbc.CardImgOverlay(
@@ -286,7 +286,8 @@ cardTwo = dbc.Card(
                         "A interactive line-chart showcasing game-week timeseries data in correlation with total points",
                         className="card-text",
                     ),
-                    dbc.Button("Open App", id="opentwo", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
+                    dbc.Button("Open App", id="opentwo", color='warning'),
+                    # style={'margin': 'auto', 'width': '100%'}),
                     dbc.Modal(
                         [
                             dbc.ModalHeader("Player Gameweek Performance"),
@@ -303,7 +304,7 @@ cardTwo = dbc.Card(
             ),
         ),
     ],
-    #style={"width": "22rem", 'height': '15rem'},
+    # style={"width": "22rem", 'height': '15rem'},
 )
 
 cardThree = dbc.Card(
@@ -319,7 +320,7 @@ cardThree = dbc.Card(
                     "xGChain, xGBuildup, npg. Pick any player in the league and begin exploring.",
                     className="card-text",
                 ),
-                dbc.Button("Open App", id="open3", color='warning'), #style={'margin': 'auto', 'width': '100%'}),
+                dbc.Button("Open App", id="open3", color='warning'),  # style={'margin': 'auto', 'width': '100%'}),
                 dbc.Modal(
                     [
                         dbc.ModalHeader("Player Gameweek Performance"),
@@ -380,7 +381,7 @@ navbar = dbc.Navbar(
                         dbc.Col(dbc.NavbarBrand("Fantasy Premier League Visualisations", className="ml-2")),
                     ],
                     align="center",
-                    #no_gutters=True,
+                    # no_gutters=True,
 
                 ),
                 # href="https://plot.ly",
@@ -399,7 +400,7 @@ navbar = dbc.Navbar(
     ),
     color="dark",
     dark=True,
-    #className="mb-4",
+    # className="mb-4",
 )
 #####################################################################################
 
@@ -436,11 +437,12 @@ width = {'offset': 0}
 
 viz_layout = html.Div([
     # dbc.Row(dbc.Col(navbar, width=12)),
-    dbc.Row([dbc.Col(cardOne, xs={'size': 12,  "offset": 0}, sm={'size': 12,  "offset": 0}, md={'size': 6,  "offset": 1}, lg={'size': 3,  "offset": 1}),
+    dbc.Row([dbc.Col(cardOne, xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 6, "offset": 1},
+                     lg={'size': 3, "offset": 1}),
              dbc.Col(cardThree, xs=12, sm=12, md=6, lg=3),
              dbc.Col(cardTwo, xs=12, sm=12, md=6, lg=3)]),
 
-],)
+], )
 
 """app_tabs = html.Div(
     [
@@ -458,8 +460,9 @@ viz_layout = html.Div([
 app_tabs = html.Div([
     dcc.Tabs(id='tabs', value='tab-visualisations', children=[
         dcc.Tab(label='Visualisations', value='tab-visualisations', style=tab_style, selected_style=tab_selected_style),
-        dcc.Tab(label='Tab 2', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+        dcc.Tab(label='Optimal Captaincy', value='tab-2', style=tab_style, selected_style=tab_selected_style),
     ], style=tabs_styles),
+
 ])
 
 app.layout = html.Div([
@@ -470,28 +473,117 @@ app.layout = html.Div([
 
 ])
 
-text_input = html.Div([
-    html.H6("Change the value in the text box to see callbacks in action!"),
-    html.Div([
-        "Input: ",
-        dcc.Input(id='my-input', value='initial value', type='text')
-    ]),
-    html.Br(),
-    html.Div(id='my-output'),
 
+def captain_layout_function(captain_df):
+    captain_layout = html.Div([
+        dbc.Row([
+            dbc.Col([
+                dash_table.DataTable(
+                    captain_df.to_dict('records'),
+                    [{"name": i, "id": i} for i in captain_df.columns],
+                    filter_action='native',
+                    page_size=5,
+                    style_table={'overflowX': 'auto', 'height': '250px'},
+                    fill_width=False,
+                    style_data={'whiteSpace': 'normal', 'height': 'auto', 'font_size': 15},
+                    style_cell={
+                        # 'height': 'auto',
+                        # all three widths are needed
+                        # 'minWidth': '100px', 'width': '100px', 'maxWidth': '100px',
+                        # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                        'whiteSpace': 'normal'
+                    },
+                ),
+            ], width={'size': 10, "offset": 1, 'order': 0}),
+        ])
+    ])
+    return captain_layout
+
+
+app.config.suppress_callback_exceptions = True
+
+inputs = html.Div([
+    dbc.Row(
+        className='mb-5',
+    ),
+    dbc.Row(
+        className='mb-5',
+    ),
+    dbc.Row(
+        dbc.Col(
+            html.H1("Optimal Captaincy History", className='text-center text-primary, mb-3'),
+            width={"size": 6, "offset": 3},
+        )
+    ),
+    dbc.Row(
+        dbc.Col(
+            html.H2("Enter Team ID below", className='text-center text-primary, mb-4'),
+            width={"size": 6, "offset": 3},
+        )
+    ),
+    dbc.Row([
+        dbc.Col([
+            dbc.Input(id="input", placeholder="Type something...", type="text"),
+            html.Br(),
+            html.Div(id='output', children=[]),
+    ]),
+        ]),
+    dbc.Row([
+    ]),
+    dbc.Row([
+        dbc.Col([
+            dbc.Alert(
+                "Invalid Team ID - Please Re-Enter a Valid Team ID",
+                id="alert-auto",
+                is_open=False,
+                duration=3000,
+                color='danger',
+                className='text-center mb-4'
+            ),
+        ], width={"size": 4, "offset": 4}, className="d-grid gap-2", )
+    ]),
 ])
 
 
-@app.callback(
-    Output(component_id='my-output', component_property='children'),
-    Input(component_id='my-input', component_property='value')
+import json
+@app.callback(Output("output", "children"), [Input("input", "value")])
+def output_text(value):
+    if value == None:
+        return 'No Value!'
+    id = value
+    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{id}/")
+    manager_id.json()
+    data = (json.loads(manager_id.text))
+    print(value)
+    temp_df = optimal_captain(value)
+    data = temp_df.to_dict('records')
+    columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
+    return dash_table.DataTable(data=data, columns=columns)
+    #return value
+
+"""@app.callback(
+    Output('container-button-basic', 'children'),
+    Input('submit-val', 'n_clicks'),
+    Input('input-on-submit', 'value')
 )
-def update_output_div(input_value):
-    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{input_value}/")
-    if manager_id.status_code == 200:
-        return f'Output: {input_value}'
+def update_output_div(value, n_clicks):
+    idd = value
+    print(idd)
+    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{idd}/")
+    print(manager_id)
+    print(value, 'check1')
+    if n_clicks is not None:
+        manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{value}/")
+        manager = manager_id.json()
+        if manager_id.status_code == 200:
+            a = optimal_captain(manager)
+            print(a)
+        else:
+            return f'Invalid Input'
     else:
-        return f'Not Valid'
+        return 0"""
+
+
 
 """def check_validity(text):
     if text:
@@ -501,7 +593,9 @@ def update_output_div(input_value):
             print(manager_id)
             manager_id.json()
             return manager_id, not manager_id
-    return True, False"""
+    return True, False
+"""
+
 
 @app.callback(
     Output("content", "children"),
@@ -511,7 +605,7 @@ def switch_tab(tab_chosen):
     if tab_chosen == "tab-visualisations":
         return viz_layout
     if tab_chosen == 'tab-2':
-        return text_input
+        return inputs
     return html.P("This shouldn't be displayed for now...")
 
 
@@ -724,8 +818,8 @@ def radar_function(firstPlayer, secondPayer):
                 showticklabels=False, ticks='',
                 gridcolor='yellow'),
         ),
-        #width=750,
-        #height=750,
+        # width=750,
+        # height=750,
         plot_bgcolor='rgba(0, 0, 0, 0)',
         paper_bgcolor='rgba(0, 0, 0, 0)',
 
@@ -735,3 +829,16 @@ def radar_function(firstPlayer, secondPayer):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+"""    dbc.Row([
+        dbc.Col([
+            dbc.Input(id='manager_id', type='text', placeholder="Enter Team ID", size="lg",
+                      className='text-center mb-4')
+        ], width={"size": 6, "offset": 3}, align="center")
+    ]),"""
+"""    dbc.Row([
+        dbc.Col([
+            dbc.Button("Search", color="success", id='alert-toggle-auto', n_clicks=0),
+        ], width={"size": 4, "offset": 4}, className="d-grid gap-2 mb-4", )
+    ]),
+"""
