@@ -1,6 +1,6 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
-#import dash_table
+# import dash_table
 import pandas
 import dash
 from dash import html, dcc, Input, Output, dash_table
@@ -20,6 +20,7 @@ from sqlalchemy import create_engine
 from flask import Flask
 from captain_picks import optimal_captain
 import json
+
 server = Flask(__name__)
 app = dash.Dash(__name__, server=server, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}]
@@ -485,7 +486,7 @@ def captain_layout_function(captain_df):
                     sort_mode="multi",
                     column_selectable="single",
                     filter_action='native',
-                    page_size=5,
+                    page_size=6,
                     style_table={'overflowX': 'auto', 'height': '250px'},
                     fill_width=False,
                     style_data={'whiteSpace': 'normal', 'height': 'auto', 'font_size': 15},
@@ -495,19 +496,54 @@ def captain_layout_function(captain_df):
                         # 'minWidth': '100px', 'width': '100px', 'maxWidth': '100px',
                         # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
                         'whiteSpace': 'normal'
-                    }),
+                    },
+                    style_data_conditional=[
+                        {
+                            'if': {
+                                'filter_query': '{Points} >= {Optimal Points}',
+                                'column_id': 'Difference'
+                            },
+                            'color': 'chartreuse',
+                            'fontWeight': 'bold'
+                        },
+                        {
+                            'if': {
+                                'filter_query': '{Difference} <= -10 && {Difference} >= -20',
+                                'column_id': 'Difference'
+                            },
+                            'color': 'orange',
+                            'fontWeight': 'bold'
+                        },
+                        {
+                            'if': {
+                                'filter_query': '{Difference} <= -1 && {Difference} > -10',
+                                'column_id': 'Difference'
+                            },
+                            'color': 'forestgreen',
+                            'fontWeight': 'bold'
+                        },
+                        {
+                            'if': {
+                                'filter_query': '{Difference} < -20',
+                                'column_id': 'Difference'
+                            },
+                            'color': 'red',
+                            'fontWeight': 'bold'
+                        },
+
+                    ],
+
+                ),
             ], width={'size': 10, "offset": 1, 'order': 0}),
         ])
     ])
     return captain_layout
 
+
 app.config.suppress_callback_exceptions = True
 
 inputs = html.Div(
     children=[
-        dbc.Row(
-            className='mb-5',
-        ),
         dbc.Row(
             className='mb-5',
         ),
@@ -527,14 +563,15 @@ inputs = html.Div(
             dbc.Col([
                 dbc.Input(id="input", placeholder="Enter Team ID", type="text", className="text-center mb-4"),
                 html.Br(),
-            ], width={"size": 6, "offset": 3}),
+            ], width={"size": 4, "offset": 4}),
 
-            dbc.Col(dbc.Button(id="loading-button", n_clicks=0, children=["Passengers"]),
+            dbc.Col(dbc.Button(id="loading-button", n_clicks=0, color='success', children=["Enter"]),
                     width={'size': 1, 'offset': 0}),
         ]),
         dbc.Row([
             dbc.Col([
-                dbc.Spinner(html.Div(id='output', children=[]), fullscreen=True, spinner_style={"width" : "10rem", "height" : "10rem"}),
+                dbc.Spinner(html.Div(id='output', children=[]), fullscreen=True,
+                            spinner_style={"width": "10rem", "height": "10rem"}),
 
             ]),
         ]),
@@ -589,10 +626,11 @@ def output_text(n_clicks, value):
             data = (json.loads(manager_id.text))
             print(value)
             temp_df = optimal_captain(value).reset_index()
-            #data = temp_df.to_dict('records')
-            #columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
+            # data = temp_df.to_dict('records')
+            # columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
             return captain_layout_function(temp_df), dash.no_update
     return dash.no_update
+
 
 @app.callback(
     Output("content", "children"),
