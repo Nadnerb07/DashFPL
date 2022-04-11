@@ -14,7 +14,7 @@ def optimal_captain(manager_id):
     at = a.json()
     test1 = pd.DataFrame(at['elements'])
     test1 = test1[['id', 'web_name']]
-    #print('a', a)
+    # print('a', a)
     gameweek = 1
     dataset = pd.DataFrame
 
@@ -25,9 +25,9 @@ def optimal_captain(manager_id):
         r = requests.get(f"https://fantasy.premierleague.com/api/entry/{manager_id}/event/{gameweek}/picks/")
         # print(r, 'while')
         if r.status_code == 404:
-            #print(r.json())
+            # print(r.json())
             # print(gameweek, "404")
-            #print('HereLast', gameweek)
+            # print('HereLast', gameweek)
             break
         else:
             data = (json.loads(r.text))
@@ -40,13 +40,13 @@ def optimal_captain(manager_id):
             df = pd.concat([df, cpt])
         gameweek += 1
     df.index = np.arange(0, len(df))
-    #df.index.name = 'Gameweek'
+    # df.index.name = 'Gameweek'
 
     col_one_list = df['element'].tolist()
     print(col_one_list)
     e = []
     gw = 1
-    #print('HereLO')
+    # print('HereLO')
     # Merge the double gameweeks, i is list of user captains get score for each week
     for i in col_one_list:
 
@@ -59,15 +59,15 @@ def optimal_captain(manager_id):
         df_new = elements_df.groupby(elements_df['round']).aggregate(aggregation_functions)
         # print(df_new.at[gw, 'total_points'])
         # print(df_new, gw)
-        #print(gw, i)
-        #print(df_new)
+        # print(gw, i)
+        # print(df_new)
         try:
             e.append(df_new.at[gw, 'total_points'])
-            #print(e)
+            # print(e)
         except KeyError:
             continue
         gw += 1
-        if gw == len(col_one_list)+1:
+        if gw == len(col_one_list) + 1:
             break
     print(e)
     df['total_points'] = pd.Series(e)
@@ -94,13 +94,18 @@ def optimal_captain(manager_id):
 
     tpdf.index.name = 'Gameweek'
     df = df.join(tpdf)
-    df = df.drop(columns=['position', 'is_captain', 'is_vice_captain'])
+    df['total_points'] = df.total_points * df.multiplier
+    df['points'] = df.points * 2
+    df = df.drop(columns=['position', 'is_captain', 'is_vice_captain', 'multiplier'])
     df['id'] = df['id'].map(test1.set_index('id')['web_name'])
     df['element'] = df['element'].map(test1.set_index('id')['web_name'])
+    df = df.rename(
+        columns={'element': 'Captain', 'total_points': 'Points', 'id': 'Optimal Pick', 'points': 'Optimal Points'})
+    df['Difference'] = df['Points'] - df['Optimal Points']
     df.index.name = 'Gameweek'
-    print(df)
+
+    # print(df)
     return df
 
-
-#optimal_captain(8931)
-#optimal_captain(6518279)
+# optimal_captain(8931)
+# optimal_captain(6518279)

@@ -1,9 +1,9 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
-import dash_table
+#import dash_table
 import pandas
 import dash
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Input, Output, dash_table
 import plotly.express as px
 import pandas as pd
 from PIL import Image
@@ -19,7 +19,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from flask import Flask
 from captain_picks import optimal_captain
-
+import json
 server = Flask(__name__)
 app = dash.Dash(__name__, server=server, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}]
@@ -99,7 +99,7 @@ pdff = getPlayer()
 # del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
 pdf = pdff[['web_name', 'status', 'total_points', 'goals_scored', 'assists', 'minutes', 'bonus', 'selected_by_percent',
             'now_cost', 'team', 'news', 'id']]
-
+pd.options.mode.chained_assignment = None
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
 # print(type(pdf['selected_by_percent'][0]))
@@ -481,6 +481,9 @@ def captain_layout_function(captain_df):
                 dash_table.DataTable(
                     captain_df.to_dict('records'),
                     [{"name": i, "id": i} for i in captain_df.columns],
+                    sort_action="native",
+                    sort_mode="multi",
+                    column_selectable="single",
                     filter_action='native',
                     page_size=5,
                     style_table={'overflowX': 'auto', 'height': '250px'},
@@ -492,25 +495,12 @@ def captain_layout_function(captain_df):
                         # 'minWidth': '100px', 'width': '100px', 'maxWidth': '100px',
                         # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
                         'whiteSpace': 'normal'
-                    },
-                ),
+                    }),
             ], width={'size': 10, "offset": 1, 'order': 0}),
         ])
     ])
     return captain_layout
 
-spinners = html.Div(
-    [
-        dbc.Spinner(color="primary", type="grow"),
-        dbc.Spinner(color="secondary", type="grow"),
-        dbc.Spinner(color="success", type="grow"),
-        dbc.Spinner(color="warning", type="grow"),
-        dbc.Spinner(color="danger", type="grow"),
-        dbc.Spinner(color="info", type="grow"),
-        dbc.Spinner(color="light", type="grow"),
-        dbc.Spinner(color="dark", type="grow"),
-    ]
-)
 app.config.suppress_callback_exceptions = True
 
 inputs = html.Div(
@@ -557,11 +547,6 @@ inputs = html.Div(
         ]),
     ])
 
-import json
-import requests
-
-"""alert = dbc.Alert("Please Enter a Valid Team ID", color="danger",
-                  dismissable=True, duration=3000),"""
 alert = html.Div(
     [
         dbc.Row([
@@ -603,46 +588,11 @@ def output_text(n_clicks, value):
             manager_id.json()
             data = (json.loads(manager_id.text))
             print(value)
-            temp_df = optimal_captain(value)
-            data = temp_df.to_dict('records')
-            columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
-            return dash_table.DataTable(data=data, columns=columns), dash.no_update
+            temp_df = optimal_captain(value).reset_index()
+            #data = temp_df.to_dict('records')
+            #columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
+            return captain_layout_function(temp_df), dash.no_update
     return dash.no_update
-
-
-"""@app.callback(
-    Output('container-button-basic', 'children'),
-    Input('submit-val', 'n_clicks'),
-    Input('input-on-submit', 'value')
-)
-def update_output_div(value, n_clicks):
-    idd = value
-    print(idd)
-    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{idd}/")
-    print(manager_id)
-    print(value, 'check1')
-    if n_clicks is not None:
-        manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{value}/")
-        manager = manager_id.json()
-        if manager_id.status_code == 200:
-            a = optimal_captain(manager)
-            print(a)
-        else:
-            return f'Invalid Input'
-    else:
-        return 0"""
-
-"""def check_validity(text):
-    if text:
-        manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{text}/")
-        print(manager_id)
-        if manager_id.status_code == 200:
-            print(manager_id)
-            manager_id.json()
-            return manager_id, not manager_id
-    return True, False
-"""
-
 
 @app.callback(
     Output("content", "children"),
@@ -666,19 +616,6 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
-
-
-"""
-    fig = px.line(gwdf1, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'],
-                  )
-
-    fig.update_traces(connectgaps=False)
-    fig.add_scatter(x=gwdf2['round'], y=gwdf2['total_points'], mode='lines', hovertext=gwdf2['total_points'],
-                    hoverinfo="text", name=player2)
-
-    return fig
-
-"""
 
 
 @app.callback(
@@ -876,16 +813,3 @@ def radar_function(firstPlayer, secondPayer):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-"""    dbc.Row([
-        dbc.Col([
-            dbc.Input(id='manager_id', type='text', placeholder="Enter Team ID", size="lg",
-                      className='text-center mb-4')
-        ], width={"size": 6, "offset": 3}, align="center")
-    ]),"""
-"""    dbc.Row([
-        dbc.Col([
-            dbc.Button("Search", color="success", id='alert-toggle-auto', n_clicks=0),
-        ], width={"size": 4, "offset": 4}, className="d-grid gap-2 mb-4", )
-    ]),
-"""
