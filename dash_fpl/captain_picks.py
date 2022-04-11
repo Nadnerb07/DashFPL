@@ -40,9 +40,10 @@ def optimal_captain(manager_id):
             df = pd.concat([df, cpt])
         gameweek += 1
     df.index = np.arange(0, len(df))
-    df.index.name = 'Gameweek'
+    #df.index.name = 'Gameweek'
 
     col_one_list = df['element'].tolist()
+    print(col_one_list)
     e = []
     gw = 1
     #print('HereLO')
@@ -66,9 +67,9 @@ def optimal_captain(manager_id):
         except KeyError:
             continue
         gw += 1
-        if gw == len(col_one_list):
+        if gw == len(col_one_list)+1:
             break
-
+    print(e)
     df['total_points'] = pd.Series(e)
     df.index = np.arange(1, len(df) + 1)
 
@@ -97,9 +98,9 @@ def optimal_captain(manager_id):
     df['id'] = df['id'].map(test1.set_index('id')['web_name'])
     df['element'] = df['element'].map(test1.set_index('id')['web_name'])
     df.index.name = 'Gameweek'
-    #print(df)
+    print(df)
     return df
 
 
 #optimal_captain(8931)
-# optimal_captain(6518279)
+optimal_captain(6518279)

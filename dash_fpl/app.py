@@ -523,43 +523,49 @@ inputs = html.Div([
     ),
     dbc.Row([
         dbc.Col([
-            dbc.Input(id="input", placeholder="Type something...", type="text"),
+            dbc.Input(id="input", placeholder="Enter Team ID", type="text", className="text-center mb-4"),
             html.Br(),
-            html.Div(id='output', children=[]),
+        ], width={"size": 6, "offset": 3}),
     ]),
+    dbc.Row([
+        dbc.Col([
+            html.Div(id='output', children=[]),
         ]),
+    ]),
     dbc.Row([
     ]),
     dbc.Row([
         dbc.Col([
-            dbc.Alert(
-                "Invalid Team ID - Please Re-Enter a Valid Team ID",
-                id="alert-auto",
-                is_open=False,
-                duration=3000,
-                color='danger',
-                className='text-center mb-4'
-            ),
+            html.Div(id="the_alert", children=[]),
         ], width={"size": 4, "offset": 4}, className="d-grid gap-2", )
     ]),
 ])
 
-
 import json
-@app.callback(Output("output", "children"), [Input("input", "value")])
+import requests
+
+alert = dbc.Alert("Please choose Districts from dropdown to avoid further disappointment!", color="danger",
+                  dismissable=True, duration=3000),
+
+
+@app.callback([Output("output", "children"), Output("the_alert", "children")], [Input("input", "value")])
 def output_text(value):
     if value == None:
-        return 'No Value!'
+        return dash.no_update
     id = value
     manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{id}/")
+    if manager_id.status_code == 404:
+        return alert, dash.no_update
+
     manager_id.json()
     data = (json.loads(manager_id.text))
     print(value)
     temp_df = optimal_captain(value)
     data = temp_df.to_dict('records')
     columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
-    return dash_table.DataTable(data=data, columns=columns)
-    #return value
+    return dash_table.DataTable(data=data, columns=columns), dash.no_update
+    # return value
+
 
 """@app.callback(
     Output('container-button-basic', 'children'),
@@ -582,8 +588,6 @@ def update_output_div(value, n_clicks):
             return f'Invalid Input'
     else:
         return 0"""
-
-
 
 """def check_validity(text):
     if text:
