@@ -103,4 +103,4 @@ def optimal_captain(manager_id):
 
 
 #optimal_captain(8931)
-optimal_captain(6518279)
+#optimal_captain(6518279)

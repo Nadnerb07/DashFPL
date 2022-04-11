@@ -499,72 +499,115 @@ def captain_layout_function(captain_df):
     ])
     return captain_layout
 
-
+spinners = html.Div(
+    [
+        dbc.Spinner(color="primary", type="grow"),
+        dbc.Spinner(color="secondary", type="grow"),
+        dbc.Spinner(color="success", type="grow"),
+        dbc.Spinner(color="warning", type="grow"),
+        dbc.Spinner(color="danger", type="grow"),
+        dbc.Spinner(color="info", type="grow"),
+        dbc.Spinner(color="light", type="grow"),
+        dbc.Spinner(color="dark", type="grow"),
+    ]
+)
 app.config.suppress_callback_exceptions = True
 
-inputs = html.Div([
-    dbc.Row(
-        className='mb-5',
-    ),
-    dbc.Row(
-        className='mb-5',
-    ),
-    dbc.Row(
-        dbc.Col(
-            html.H1("Optimal Captaincy History", className='text-center text-primary, mb-3'),
-            width={"size": 6, "offset": 3},
-        )
-    ),
-    dbc.Row(
-        dbc.Col(
-            html.H2("Enter Team ID below", className='text-center text-primary, mb-4'),
-            width={"size": 6, "offset": 3},
-        )
-    ),
-    dbc.Row([
-        dbc.Col([
-            dbc.Input(id="input", placeholder="Enter Team ID", type="text", className="text-center mb-4"),
-            html.Br(),
-        ], width={"size": 6, "offset": 3}),
-    ]),
-    dbc.Row([
-        dbc.Col([
-            html.Div(id='output', children=[]),
+inputs = html.Div(
+    children=[
+        dbc.Row(
+            className='mb-5',
+        ),
+        dbc.Row(
+            className='mb-5',
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.H1("Optimal Captaincy History", className='text-center text-primary, mb-3'),
+                width={"size": 6, "offset": 3},
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.H2("Enter Team ID below", className='text-center text-primary, mb-4'),
+                width={"size": 6, "offset": 3},
+            )
+        ),
+        dbc.Row([
+            dbc.Col([
+                dbc.Input(id="input", placeholder="Enter Team ID", type="text", className="text-center mb-4"),
+                html.Br(),
+            ], width={"size": 6, "offset": 3}),
+
+            dbc.Col(dbc.Button(id="loading-button", n_clicks=0, children=["Passengers"]),
+                    width={'size': 1, 'offset': 0}),
         ]),
-    ]),
-    dbc.Row([
-    ]),
-    dbc.Row([
-        dbc.Col([
-            html.Div(id="the_alert", children=[]),
-        ], width={"size": 4, "offset": 4}, className="d-grid gap-2", )
-    ]),
-])
+        dbc.Row([
+            dbc.Col([
+                dbc.Spinner(html.Div(id='output', children=[]), fullscreen=True, spinner_style={"width" : "10rem", "height" : "10rem"}),
+
+            ]),
+        ]),
+        dbc.Row([
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.Div(id="the_alert", children=[]),
+            ], width={"size": 4, "offset": 4}, className="d-grid gap-2", )
+        ]),
+    ])
 
 import json
 import requests
 
-alert = dbc.Alert("Please choose Districts from dropdown to avoid further disappointment!", color="danger",
-                  dismissable=True, duration=3000),
+"""alert = dbc.Alert("Please Enter a Valid Team ID", color="danger",
+                  dismissable=True, duration=3000),"""
+alert = html.Div(
+    [
+        dbc.Row([
+            dbc.Col([
+                dbc.Alert(
+                    [
+                        html.H4('Error - Invalid Team ID', className="alert-heading"),
+                        html.Hr(),
+                        "Please enter a valid team ID, a guide on how to find your team ID can be found ",
+                        html.A("Here", href="https://fpl.team/find-id", className="alert-link"),
+                    ],
+                    color="danger", dismissable=True, duration=4500,
+                ),
+            ], width={"size": 6, "offset": 3}, className="d-grid gap-2"),
+        ]),
+    ]
+)
+
+dbc.Alert(
+    [
+        html.H4('Error - Invalid Team ID', className="alert-heading"),
+        html.Hr(),
+        "Please enter a valid team ID, a guide on how to find your team ID can be found ",
+        html.A("Here", href="https://fpl.team/find-id", className="alert-link"),
+    ],
+    color="danger",
+),
 
 
-@app.callback([Output("output", "children"), Output("the_alert", "children")], [Input("input", "value")])
-def output_text(value):
-    if value == None:
-        return dash.no_update
-    id = value
-    manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{id}/")
-    if manager_id.status_code == 404:
-        return alert, dash.no_update
-
-    manager_id.json()
-    data = (json.loads(manager_id.text))
-    print(value)
-    temp_df = optimal_captain(value)
-    data = temp_df.to_dict('records')
-    columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
-    return dash_table.DataTable(data=data, columns=columns), dash.no_update
-    # return value
+@app.callback([Output("output", "children"), Output("the_alert", "children")],
+              [Input("loading-button", "n_clicks")], [State("input", "value")])
+def output_text(n_clicks, value):
+    if n_clicks:
+        id = value
+        manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{id}/")
+        if manager_id.status_code == 404:
+            return alert, dash.no_update
+        else:
+            manager_id.json()
+            data = (json.loads(manager_id.text))
+            print(value)
+            temp_df = optimal_captain(value)
+            data = temp_df.to_dict('records')
+            columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
+            return dash_table.DataTable(data=data, columns=columns), dash.no_update
+    return dash.no_update
 
 
 """@app.callback(
