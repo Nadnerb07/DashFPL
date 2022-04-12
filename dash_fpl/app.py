@@ -80,7 +80,7 @@ nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fanta
 pd.set_option('display.max_columns', 500)
 data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
 # df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
-
+mark_values = {0: '0', 5: '5', 10: '10', 15: '15', 20: '20'}
 
 # engine = create_engine('postgresql://postgres:jedi1999@localhost:5432/data')
 # df = pd.read_sql_table('shot_data', con=db.engine)
@@ -88,6 +88,7 @@ data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
 # df.to_sql('shot_data', engine)
 
 pdff = getPlayer()
+# nt(pdff.head())
 # see https://plotly.com/python/px-arguments/ for more options
 # df['X'] = df['X'].astype('float64')
 # df['Y'] = df['Y'].astype('float64')
@@ -99,13 +100,15 @@ pdff = getPlayer()
 # df = df.iloc[[1583]]
 # del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
 pdf = pdff[['web_name', 'status', 'total_points', 'goals_scored', 'assists', 'minutes', 'bonus', 'selected_by_percent',
-            'now_cost', 'team', 'news', 'id']]
+            'now_cost', 'team', 'news', 'id', 'element_type']]
 pd.options.mode.chained_assignment = None
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
 # print(type(pdf['selected_by_percent'][0]))
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
+test_pdf = final_pdf
+#print(final_pdf.head())
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
@@ -242,6 +245,7 @@ DropdownApp2 = dbc.Container([
                 width=12, lg={'size': 12, "offset": 0, 'order': 'second'}),
     ]),
 ])
+
 cardOne = dbc.Card(
     [
         dbc.CardImg(src='data:assets/png;base64,{}'.format(test_base64), style={'height': '100%', 'width': '100%'},
@@ -337,6 +341,41 @@ cardThree = dbc.Card(
             ]
         ),
 
+    ],
+    style={"width": "100%", 'height': '100%'},
+)
+
+scatter_layout = html.Div([
+    dcc.Graph(id='graph-with-slider'),
+    dcc.RangeSlider(0, 50, 10, count=1, value=[40, 50], id='year-slider',
+                    )
+])
+
+cardFour = dbc.Card(
+    [
+        dbc.CardBody(
+            [
+                html.H4("Points vs % Selected", className="card-title"),
+                html.P(
+                    "An scatter chart with slider to explore the points vs % selected to find hidden value in players, "
+                    "but also effective ownership.",
+                    className="card-text",
+                ),
+                dbc.Button("Open App", id="open4", color='warning'),  # style={'margin': 'auto', 'width': '100%'}),
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader("Player's Shot Outcome"),
+                        dbc.ModalBody(scatter_layout),
+                        dbc.ModalFooter(
+                            dbc.Button("Close", id="close4", className="ml-auto")
+                        ),
+                    ],
+                    id="modal4",
+                    size="lg",
+                    style={'color': 'plotly_dark'},
+                ),
+            ]
+        ),
     ],
     style={"width": "100%", 'height': '100%'},
 )
@@ -441,7 +480,8 @@ viz_layout = html.Div([
     dbc.Row([dbc.Col(cardOne, xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 6, "offset": 1},
                      lg={'size': 3, "offset": 1}),
              dbc.Col(cardThree, xs=12, sm=12, md=6, lg=3),
-             dbc.Col(cardTwo, xs=12, sm=12, md=6, lg=3)]),
+             dbc.Col(cardTwo, xs=12, sm=12, md=6, lg=3),
+             dbc.Col(cardFour, xs=12, sm=12, md=6, lg=3)]),
 
 ], )
 
@@ -624,7 +664,7 @@ def output_text(n_clicks, value):
         else:
             manager_id.json()
             data = (json.loads(manager_id.text))
-            print(value)
+            #print(value)
             temp_df = optimal_captain(value).reset_index()
             # data = temp_df.to_dict('records')
             # columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
@@ -715,24 +755,31 @@ def update_graph(player, choice):
     else:
         dff = dff[dff['result'] == choice]
 
-    fig = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
-                     hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False, 'Y': False}
-                     , size='xG')
+    try:
 
-    fig.update_layout(margin={'l': 0, 'b': 0, 't': 0, 'r': 0}, hovermode='closest')
+        fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
+                        hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False, 'Y': False}
+                        , size='xG')
+    except ValueError:
+        fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
+                          hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False,
+                                      'Y': False}
+                          , size='xG')
+
+    fig1.update_layout(margin={'l': 0, 'b': 0, 't': 0, 'r': 0}, hovermode='closest')
 
     # fig.update_layout(template="simple_white", width=1070, height=711,
     # xaxis_showgrid=False, yaxis_showgrid=False)
-    fig.update_xaxes(
+    fig1.update_xaxes(
         visible=False,
         range=[0, 100]
     )
 
-    fig.update_yaxes(
+    fig1.update_yaxes(
         visible=False,
         range=[0, 100]
     )
-    fig.add_layout_image(
+    fig1.add_layout_image(
         source=pyLogo,
         xref="paper",
         yref="paper",
@@ -746,7 +793,7 @@ def update_graph(player, choice):
         sizey=1.0,
     )
 
-    fig.update_layout(legend=dict(
+    fig1.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
         y=1.02,
@@ -754,7 +801,7 @@ def update_graph(player, choice):
         x=1,
         # bgcolor='rgb(0,0,0,0)',
     ))
-    return fig
+    return fig1
 
 
 @app.callback(
@@ -772,6 +819,17 @@ def toggle_modal(n1, n2, is_open):
     Output("modal3", "is_open"),
     [Input("open3", "n_clicks"), Input("close3", "n_clicks")],
     [State("modal3", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+@app.callback(
+    Output("modal4", "is_open"),
+    [Input("open4", "n_clicks"), Input("close4", "n_clicks")],
+    [State("modal4", "is_open")],
 )
 def toggle_modal(n1, n2, is_open):
     if n1 or n2:
@@ -846,6 +904,22 @@ def radar_function(firstPlayer, secondPayer):
         paper_bgcolor='rgba(0, 0, 0, 0)',
 
     )
+    return fig
+
+
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    Input('year-slider', 'value'))
+def update_figure(selected_year):
+    temp = test_pdf[
+        (test_pdf['selected_by_percent'] >= selected_year[0]) & (test_pdf['selected_by_percent'] <= selected_year[1])]
+
+    fig = px.scatter(temp, x="selected_by_percent", y="total_points",
+                     size="now_cost", hover_name="web_name",
+                     size_max=35, color='element_type', text="web_name")
+
+    fig.update_layout(transition_duration=500)
+
     return fig
 
 
