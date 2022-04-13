@@ -21,6 +21,9 @@ from flask import Flask
 from captain_picks import optimal_captain
 import json
 
+pd.options.mode.chained_assignment = None
+pd.options.display.float_format = "{:,.2f}".format
+
 server = Flask(__name__)
 app = dash.Dash(__name__, server=server, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
                 meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}]
@@ -101,6 +104,11 @@ pdff = getPlayer()
 # del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
 pdf = pdff[['web_name', 'status', 'total_points', 'goals_scored', 'assists', 'minutes', 'bonus', 'selected_by_percent',
             'now_cost', 'team', 'news', 'id', 'element_type']]
+pdf['element_type'] = pdf['element_type'].astype(str)
+pdf.loc[pdf['element_type'] == '1', 'element_type'] = 'Goalkeeper'
+pdf.loc[pdf['element_type'] == '2', 'element_type'] = 'Defender'
+pdf.loc[pdf['element_type'] == '3', 'element_type'] = 'Midfielder'
+pdf.loc[pdf['element_type'] == '4', 'element_type'] = 'Forward'
 pd.options.mode.chained_assignment = None
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
@@ -108,7 +116,7 @@ pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast=
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 test_pdf = final_pdf
-#print(final_pdf.head())
+# print(final_pdf.head())
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
@@ -264,7 +272,7 @@ cardOne = dbc.Card(
                         dbc.ModalHeader("Player's Shot Outcome"),
                         dbc.ModalBody(DropdownApp),
                         dbc.ModalFooter(
-                            dbc.Button("Close", id="close", className="ml-auto")
+                            dbc.Button("Close", id="close", className="ml-auto", color='danger')
                         ),
                     ],
                     id="modal",
@@ -298,7 +306,7 @@ cardTwo = dbc.Card(
                             dbc.ModalHeader("Player Gameweek Performance"),
                             dbc.ModalBody(DropdownApp1),
                             dbc.ModalFooter(
-                                dbc.Button("Close", id="closetwo", className="ml-auto")
+                                dbc.Button("Close", id="closetwo", className="ml-auto", color='danger')
                             ),
                         ],
                         id="modaltwo",
@@ -331,7 +339,7 @@ cardThree = dbc.Card(
                         dbc.ModalHeader("Player Gameweek Performance"),
                         dbc.ModalBody(DropdownApp2),
                         dbc.ModalFooter(
-                            dbc.Button("Close", id="close3", className="ml-auto")
+                            dbc.Button("Close", id="close3", className="ml-auto", color='danger')
                         ),
                     ],
                     id="modal3",
@@ -347,7 +355,7 @@ cardThree = dbc.Card(
 
 scatter_layout = html.Div([
     dcc.Graph(id='graph-with-slider'),
-    dcc.RangeSlider(0, 50, 10, count=1, value=[40, 50], id='year-slider',
+    dcc.RangeSlider(0, 80, 5, count=1, value=[20, 40], id='year-slider',
                     )
 ])
 
@@ -367,7 +375,7 @@ cardFour = dbc.Card(
                         dbc.ModalHeader("Player's Shot Outcome"),
                         dbc.ModalBody(scatter_layout),
                         dbc.ModalFooter(
-                            dbc.Button("Close", id="close4", className="ml-auto")
+                            dbc.Button("Close", id="close4", className="ml-auto", color='danger')
                         ),
                     ],
                     id="modal4",
@@ -664,7 +672,7 @@ def output_text(n_clicks, value):
         else:
             manager_id.json()
             data = (json.loads(manager_id.text))
-            #print(value)
+            # print(value)
             temp_df = optimal_captain(value).reset_index()
             # data = temp_df.to_dict('records')
             # columns = [{"name": i, "id": i, } for i in (temp_df.columns)]
@@ -702,6 +710,7 @@ def toggle_modal(n1, n2, is_open):
     Input('player2', 'value'),
 )
 def lineChart(player1, player2):
+    fig3 = go.Figure()
     df1 = final_pdf[final_pdf['web_name'] == player1]
     df2 = final_pdf[final_pdf['web_name'] == player2]
     # print(dff)
@@ -716,8 +725,23 @@ def lineChart(player1, player2):
     gwdf1.loc[gwdf1['minutes'] == 0, 'total_points'] = None
     gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
 
-    fig = px.line(gwdf1, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
-    fig.update_traces(line_color='blue')
+    fig3.add_trace(go.Scatter(x=gwdf1['round'], y=gwdf1['total_points'],
+                             mode='lines',
+                             name=player1))
+    fig3.add_trace(go.Scatter(x=gwdf2['round'], y=gwdf2['total_points'],
+                             mode='lines',
+                             name=player2))
+
+    fig3.update_layout(
+        title="Gameweek Player Data",
+        xaxis_title="Gameweek",
+        yaxis_title="Points",
+        legend_title="Player",
+
+    )
+
+    return fig3
+""" fig.update_traces(line_color='blue')
     fig.update_traces(connectgaps=False)
 
     fig2 = px.line(gwdf2, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
@@ -738,7 +762,7 @@ def lineChart(player1, player2):
         )
     )
 
-    return fig3
+    return fig3"""
 
 
 @app.callback(
@@ -748,6 +772,10 @@ def lineChart(player1, player2):
 def update_graph(player, choice):
     dff = df[df['player'] == player]
     # Data frame with all the players data including shot data
+    #dff["player_assisted"].replace(None, "No", regex=True)
+    #dff['player_assisted'] = dff['player_assisted'].replace({'None':'No Assist'})
+    print(dff)
+    #print(dff.info())
     if choice == 'all_values':
         dff = df[df['player'] == player]
         # print(dff)
@@ -758,11 +786,12 @@ def update_graph(player, choice):
     try:
 
         fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
-                        hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False, 'Y': False}
-                        , size='xG')
+                          hover_data={"result": True, "situation": True, "player_assisted": True, 'X': False,
+                                      'Y': False}
+                          , size='xG')
     except ValueError:
         fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
-                          hover_data={"result": True, "situation": True, 'player_assisted': True, 'X': False,
+                          hover_data={"result": True, "situation": True, "player_assisted": True, 'X': False,
                                       'Y': False}
                           , size='xG')
 

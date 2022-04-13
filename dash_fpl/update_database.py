@@ -177,14 +177,14 @@ async def main(shot_list, epl):
         league_teams = await understat.get_teams('epl', season)
         # Clean league team data, returns list of teams
         teams_lst = team_cleaning(league_teams)
-        print(teams_lst)
+        #print(teams_lst)
         # player_shots = await understat.get_player_shots(619)
 
         for j in range(len(teams_lst)):
             epl_players = await understat.get_team_players(teams_lst[j], season)
             epl += epl_players
-        print('Stage 1')
-        print(epl)
+        #print('Stage 1')
+        #print(epl)
         id_list = list_of_IDs(epl)
 
         for i in range(len(id_list)):
@@ -202,7 +202,7 @@ async def main(shot_list, epl):
         data = pd.DataFrame(test)
         df_rd_data = pd.DataFrame(rd_data)
         data_prep = format_shot_data(data, teams_lst)
-        print(data_prep.info())
+        #print(data_prep.info())
         # data_prep.to_sql(name='test', con=conn, if_exists='replace', index=False)
         # test = format_data(test)
         # df = pd.DataFrame(data)
@@ -212,11 +212,12 @@ async def main(shot_list, epl):
         data_prep.to_sql('shot_data', engine, if_exists='replace', index=False)
 
 def format_shot_data(df, team_lst):
+    #print(df)
     df['X'] = df['X'].astype('float64')
     df['Y'] = df['Y'].astype('float64')
     df['minute'] = df['minute'].astype('int64')
     df['result'] = df['result'].astype(str)
-    df['xG'] = df['xG'].astype('float64')
+    df['xG'] = df['xG'].astype('float64').round(2)
     df['player'] = df['player'].astype('unicode')
     df['h_goals'] = df['h_goals'].astype('int64')
     df['a_goals'] = df['a_goals'].astype('int64')
@@ -227,28 +228,31 @@ def format_shot_data(df, team_lst):
     df = df[df['h_team'].isin(team_lst)]
     df['X'] = (df['X']) * 100
     df['Y'] = (df['Y']) * 100
-
+    df.fillna("", inplace=True)
     return df
 
 
 def format_player_data(df):
+    #print(df.head())
     df['player_name'] = df['player_name'].astype('unicode')
     df['id'] = df['id'].astype('int64')
     df['games'] = df['games'].astype('int64')
     df['time'] = df['time'].astype('int64')
     df['goals'] = df['goals'].astype('int64')
-    df['xG'] = df['xG'].astype('float64')
+    df['xG'] = df['xG'].astype('float64').round(2)
     df['assists'] = df['assists'].astype('int64')
-    df['xA'] = df['xA'].astype('float64')
+    df['xA'] = df['xA'].astype('float64').round(2)
     df['shots'] = df['shots'].astype('int64')
     df['key_passes'] = df['key_passes'].astype('int64')
     df['yellow_cards'] = df['yellow_cards'].astype('int64')
     df['red_cards'] = df['red_cards'].astype('int64')
     df['npg'] = df['npg'].astype('int64')
-    df['npxG'] = df['npxG'].astype('float64')
-    df['xGChain'] = df['xGChain'].astype('float64')
-    df['xGBuildup'] = df['xGBuildup'].astype('float64')
-
+    df['npxG'] = df['npxG'].astype('float64').round(2)
+    df['xGChain'] = df['xGChain'].astype('float64').round(2)
+    df['xGBuildup'] = df['xGBuildup'].astype('float64').round(2)
+    #df['xG90'] = df['xG90'].astype('float64')
+    #df['xG90'] = df['xG90'].round(2)
+    #print(df.head())
     return df
 
 
@@ -273,7 +277,7 @@ def list_of_IDs(players):
     #players.to_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv', index=False)
     players.to_sql('radar_data', engine, if_exists='replace', index=False)
     id_list = players['id']
-    print(id_list)
+    #print(id_list)
     return id_list
 
 
