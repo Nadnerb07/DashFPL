@@ -1,7 +1,6 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
-# import dash_table
-import pandas
+
 import dash
 from dash import html, dcc, Input, Output, dash_table
 import plotly.express as px
@@ -13,8 +12,7 @@ from data_extraction import getPlayer, get_gameweek_history
 from dash.dependencies import Input, Output, State
 import base64
 import plotly.graph_objects as go
-import psycopg2
-import os
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from flask import Flask
@@ -34,9 +32,6 @@ app.server.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://postgres:jedi1999@l
 db = SQLAlchemy(app.server)
 
 df = pd.read_sql_table('shot_data', con=db.engine)
-# radar_data = pd.read_sql_table('radar_data', con=db.engine)
-
-# rdf = pd.DataFrame(radar_data)
 
 tabs_styles = {
     'height': '44px'
@@ -46,28 +41,19 @@ tab_style = {
     'padding': '6px',
     'fontWeight': 'bold'
 }
-
 tab_selected_style = {
     'borderTop': '1px solid #d6d6d6',
     'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#119DFF',
-    'color': 'white',
+    'backgroundColor': '#00ff85',#00ff85
+    'color': 'black',
     'padding': '6px'
 }
-"""
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
-                meta_tags=[{'name': 'viewport',
-                            'content': 'width=device-width, initial-scale=1'}]
-                )
-"""
 
-# yo = pd.read_csv('/Users/brendanbaker/PycharmProjects/flaskFPL/radar_data_2021-22.csv')
-# rdf = pd.DataFrame(yo)
 
 yo = pd.read_sql_table('radar_data', con=db.engine)
 
 rdf = pd.DataFrame(yo)
-# print(rdf.info())
+
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -80,28 +66,17 @@ test_png2 = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-07 at 11.11.3
 test2_base64 = base64.b64encode(open(test_png2, 'rb').read()).decode('ascii')
 nav_item = dbc.NavItem(dbc.NavLink("Fantasy Premier League", href="https://fantasy.premierleague.com/"))
 
+bubble_image_temp = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-04-20 at 17.06.33.png'
+bubble_image = base64.b64encode(open(bubble_image_temp, 'rb').read()).decode('ascii')
 pd.set_option('display.max_columns', 500)
-data = ['xG', 'xA', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'xG']
-# df = pd.read_csv('/Users/brendanbaker/PycharmProjects/UnderstatAPI/Testing/shot_data.csv')
-mark_values = {0: '0', 5: '5', 10: '10', 15: '15', 20: '20'}
+data = ['xG90', 'xA90', 'A90', 'xGBuildup90', 'G90', 'xG90']
 
-# engine = create_engine('postgresql://postgres:jedi1999@localhost:5432/data')
-# df = pd.read_sql_table('shot_data', con=db.engine)
 
-# df.to_sql('shot_data', engine)
 
 pdff = getPlayer()
-# nt(pdff.head())
+
 # see https://plotly.com/python/px-arguments/ for more options
-# df['X'] = df['X'].astype('float64')
-# df['Y'] = df['Y'].astype('float64')
-# print(0.034000001 * 98)
-# print(0.690999985 * 100)
-# df['X'] = ((df['X']) * 100)
-# df['Y'] = ((df['Y']) * 100)
-# print(df.iloc[[5042]])
-# df = df.iloc[[1583]]
-# del pdf['dreamteam_count'], pdf['special'], pdf['squad_number'], pdf['bps'], pdf['influence'], pdf['creativity'], pdf['threat'], pdf['ict_index'], pdf['influence_rank'], pdf['influence_rank_type'], pdf['creativity_rank']
+
 pdf = pdff[['web_name', 'status', 'total_points', 'goals_scored', 'assists', 'minutes', 'bonus', 'selected_by_percent',
             'now_cost', 'team', 'news', 'id', 'element_type']]
 pdf['element_type'] = pdf['element_type'].astype(str)
@@ -112,86 +87,15 @@ pdf.loc[pdf['element_type'] == '4', 'element_type'] = 'Forward'
 pd.options.mode.chained_assignment = None
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
-# print(type(pdf['selected_by_percent'][0]))
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 test_pdf = final_pdf
 # print(final_pdf.head())
 all = df['result'].unique()
 options = [{'label': x, 'value': x} for x in all]
+options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
-# print(df.dtypes)
-"""app.layout = dbc.Container([
-    dbc.Row([
-        dbc.Col(html.H1("FPL Dashboard",
-                        # text centered, text blue, mb-4 padding underneath title
-                        className='text-center text-primary mb-4'),
-                width=12)
-    ]),
-    dbc.Row([
-        dbc.Col(dcc.Dropdown(df['player'].unique(), id='player', ),
-                width={'size': 2, "offset": 1, 'order': 0}
-                ),
 
-        dbc.Col(dcc.Dropdown(id='choice', value='all_values',
-                             options=[{'label': 'Select all', 'value': 'all_values'}] + [{'label': x, 'value': x} for x
-                                                                                         in all]),
-                width={'size': 2, "offset": 1, 'order': 1}
-                ),
-        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player1', value='Ziyech'),
-                width={'size': 2, "offset": 0, 'order': 2}
-                ),
-        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player2', value='Ronaldo'),
-                width={'size': 2, "offset": 1, 'order': 2}
-                ),
-
-    ]),
-    dbc.Row([
-
-        dbc.Col(dcc.Graph(id='shot-map', figure={}, config={'displaylogo': False, 'displayModeBar': False}),
-                width=6, lg={'size': 5, "offset": 1, 'order': 'first'}
-                ),
-        dbc.Col(dcc.Graph(id='lc', figure={}, config={'displaylogo': False, 'displayModeBar': False}),
-                width=6, lg={'size': 6, "offset": 0, 'order': 'second'}),
-
-    ]),
-
-    dbc.Row([
-        dbc.Col(html.H1("Statistic Table",
-                        # text centered, text blue, mb-4 padding underneath title
-                        className='text-center text-primary mb-4'),
-                width=12)
-    ]),
-    # https://www.youtube.com/watch?v=0mfIK8zxUds --> Justify, turn off offset and watch out for size
-    # Order in which the features appear left-to-right, offset from left, size how many columns taken-up
-
-    dbc.Row([
-        dbc.Col([
-            dash_table.DataTable(
-                final_pdf.to_dict('records'),
-                [{"name": i, "id": i} for i in final_pdf.columns],
-                filter_action='native',
-                page_size=5,
-                style_table={'overflowX': 'auto', 'height': '250px'},
-                fill_width=False,
-                style_data={'whiteSpace': 'normal', 'height': 'auto', 'font_size': 15},
-                style_cell={
-                    # 'height': 'auto',
-                    # all three widths are needed
-                    # 'minWidth': '100px', 'width': '100px', 'maxWidth': '100px',
-                    # 'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
-                    'whiteSpace': 'normal'
-                },
-                style_cell_conditional=[
-                    {'if': {'column_id': 'news'},
-                     'width': '300px'},
-                    {'if': {'column_id': 'web_name'},
-                     'width': '150px'}],
-            ),
-        ], width={'size': 10, "offset": 1, 'order': 0}),
-    ])
-], fluid=True)
-"""
 dropdown = dbc.DropdownMenu(
     children=[
         dbc.DropdownMenuItem("LinkedIn", href='https://www.linkedin.com/in/brendan-b-249996191/'),
@@ -289,7 +193,9 @@ cardTwo = dbc.Card(
     [
         dbc.CardImg(src='data:assets/png;base64,{}'.format(test1_base64),
                     # style={'height': '100%', 'width': '100%', "opacity": 0.35},
-                    top=True),
+                    top=True,
+                    style={'height': '100%', 'width': '100%', "opacity": 0.5}
+                    ),
 
         dbc.CardImgOverlay(
             dbc.CardBody(
@@ -318,6 +224,7 @@ cardTwo = dbc.Card(
         ),
     ],
     # style={"width": "22rem", 'height': '15rem'},
+    style={"width": "100%", 'height': '100%'},
 )
 
 cardThree = dbc.Card(
@@ -361,11 +268,13 @@ scatter_layout = html.Div([
 
 cardFour = dbc.Card(
     [
+        dbc.CardImg(src='data:assets/png;base64,{}'.format(bubble_image), style={'height': '100%', 'width': '100%'},
+                    top=True),
         dbc.CardBody(
             [
                 html.H4("Points vs % Selected", className="card-title"),
                 html.P(
-                    "An scatter chart with slider to explore the points vs % selected to find hidden value in players, "
+                    "Explore points vs % selected ussing the range slider to find hidden value in players, "
                     "but also effective ownership.",
                     className="card-text",
                 ),
@@ -419,93 +328,44 @@ col3 = html.Div(
     ]
 )
 
-navbar = dbc.Navbar(
-    dbc.Container(
-        [
-            html.A(
-                # Use row and col to control vertical alignment of logo / brand
-                dbc.Row(
-                    [
-                        dbc.Col(dbc.NavbarBrand("Fantasy Premier League Visualisations", className="ml-2")),
-                    ],
-                    align="center",
-                    # no_gutters=True,
-
-                ),
-                # href="https://plot.ly",
-            ),
-            dbc.NavbarToggler(id="navbar-toggler2"),
-            dbc.Collapse(
-                dbc.Nav(
-                    [nav_item,
-                     dropdown,
-                     ], className="ml-auto", navbar=True
-                ),
-                id="navbar-collapse2",
-                navbar=True,
-            ),
-        ]
-    ),
-    color="dark",
+navbar = dbc.NavbarSimple(
+    children=[
+        dbc.NavItem(dbc.NavLink("Offical FPL", href="https://fantasy.premierleague.com/")),
+    ],
+    brand="Fantasy Premier League Visualisations",
+    brand_href="#",
+    color="#38003c",#38003c
     dark=True,
-    # className="mb-4",
 )
 #####################################################################################
-
-"""Layout"""
-
-"""app.layout = html.Div([
-    dbc.Row(dbc.Col(navbar, width=12)),
-    dbc.Row([
-        dbc.Col(col1, width={'size': 3, "offset": 0, 'order': 0}),
-        dbc.Col(col2, width={'size': 3, "offset": 0, 'order': 1}),
-    ])
-
-])
-width = {'offset': 0}
-"""
-# html.div
-"""viz_layout = html.Div([
-    # dbc.Row(dbc.Col(navbar, width=12)),
-    dbc.Row([
-        dbc.Col(col1, xs=12, sm=12, md=6, lg=3),
-        dbc.Col(col3, xs=12, sm=12, md=6, lg=3),
-        dbc.Col(
-            [
-                dbc.Row(
-                    dbc.Col(cardTwo)),
-
-                # dbc.Row(
-                # dbc.Col(cardThree))
-            ], width={'size': 3, "offset": 0, 'order': 0}),
-        # dbc.Col(col3, width={'size': 3, "offset": 0, 'order': 0}, style={'border': '1px solid'})
-    ], )
-
-], )"""
+#https://resources.premierleague.com/premierleague/photo/2018/11/14/a62ae4b3-12a5-46de-8908-308282fbff23/Rainbow-Laces-Captain-armband-v2.jpg
 
 viz_layout = html.Div([
     # dbc.Row(dbc.Col(navbar, width=12)),
-    dbc.Row([dbc.Col(cardOne, xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 6, "offset": 1},
+    dbc.Row([
+        dbc.Col(cardOne, xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 5, "offset": 1},
                      lg={'size': 3, "offset": 1}),
-             dbc.Col(cardThree, xs=12, sm=12, md=6, lg=3),
-             dbc.Col(cardTwo, xs=12, sm=12, md=6, lg=3),
-             dbc.Col(cardFour, xs=12, sm=12, md=6, lg=3)]),
 
-], )
+        dbc.Col(cardThree, xs=12, sm=12, md=5, lg=3),
+        dbc.Col(
+                [
+                    dbc.Row(
+                        cardTwo, style={'border': '1px solid'}
+                    ),
+                    dbc.Row(className='mb-4'),
+                    dbc.Row(
+                        cardFour, style={'border': '1px solid'}
+                    )
+                ],
+                xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 4, "offset": 0},
+                lg={'size': 4, "offset": 0},
+                #style={'border': '1px solid'}
+            )
+        ]
+    )
 
-"""app_tabs = html.Div(
-    [
-        dbc.Tabs(
-            [
-                dbc.Tab(label="Visualisations", tab_id="tab-visualisation", labelClassName="text-success font-weight-bold",
-                        activeLabelClassName="text-danger"),
-            ],
-            id="tabs",
-            active_tab="tab-visualisations",
-        ),
-    ], className="mt-3"
-)
-"""
+]),
+
 app_tabs = html.Div([
     dcc.Tabs(id='tabs', value='tab-visualisations', children=[
         dcc.Tab(label='Visualisations', value='tab-visualisations', style=tab_style, selected_style=tab_selected_style),
@@ -515,7 +375,7 @@ app_tabs = html.Div([
 ])
 
 app.layout = html.Div([
-    dbc.Row(dbc.Col(navbar, width=12)),
+    dbc.Row(dbc.Col(navbar, xs=12, sm=12, md=12, lg=12, xl=12, xxl=12)),
     # html.Hr(),
     dbc.Row(dbc.Col(app_tabs, width=12)),
     html.Div(id='content', children=[])
@@ -741,28 +601,6 @@ def lineChart(player1, player2):
     )
 
     return fig3
-""" fig.update_traces(line_color='blue')
-    fig.update_traces(connectgaps=False)
-
-    fig2 = px.line(gwdf2, x='round', y='total_points', title="Gameweek Payer Data", hover_data=['minutes'])
-    fig.update_traces(connectgaps=False)
-    fig2.update_traces(line_color='orange')
-    fig3 = go.Figure(data=fig.data + fig2.data)
-
-    fig3.update_layout(
-        title="Gameweek Payer Data",
-        xaxis_title="Gameweek",
-        yaxis_title="Points",
-        legend_title="Player",
-
-        font=dict(
-            family="Courier New, monospace",
-            size=18,
-            color="RebeccaPurple"
-        )
-    )
-
-    return fig3"""
 
 
 @app.callback(
@@ -771,14 +609,11 @@ def lineChart(player1, player2):
     Input('choice', 'value'))
 def update_graph(player, choice):
     dff = df[df['player'] == player]
-    # Data frame with all the players data including shot data
-    #dff["player_assisted"].replace(None, "No", regex=True)
-    #dff['player_assisted'] = dff['player_assisted'].replace({'None':'No Assist'})
+
     print(dff)
-    #print(dff.info())
+
     if choice == 'all_values':
         dff = df[df['player'] == player]
-        # print(dff)
 
     else:
         dff = dff[dff['result'] == choice]
@@ -828,7 +663,6 @@ def update_graph(player, choice):
         y=1.02,
         xanchor="right",
         x=1,
-        # bgcolor='rgb(0,0,0,0)',
     ))
     return fig1
 
@@ -871,13 +705,13 @@ def toggle_modal(n1, n2, is_open):
     Input('firstPlayer', 'value'),
     Input('secondPlayer', 'value'))
 def radar_function(firstPlayer, secondPayer):
-    # scatterpolar
+
     df1_for_plot = pd.DataFrame(rdf[rdf['player_name'] == firstPlayer][data].iloc[0])
     df2_for_plot = pd.DataFrame(rdf[rdf['player_name'] == secondPayer][data].iloc[0])
-    # print(df1_for_plot)
+
     df1_for_plot.columns = ['score']
     df2_for_plot.columns = ['score']
-    # print(df1_for_plot)
+
     list_scores = [df1_for_plot.index[i] + ' = ' + str(df1_for_plot['score'][i]) for i in
                    range(len(df1_for_plot))]
     text_scores_1 = firstPlayer
@@ -889,7 +723,6 @@ def radar_function(firstPlayer, secondPayer):
     text_scores_2 = secondPayer
     for i in list_scores:
         text_scores_2 += '<br>' + i
-    # print(text_scores_1[0])
     fig = go.Figure(data=go.Scatterpolar(
         r=df1_for_plot['score'],
         theta=df1_for_plot.index,

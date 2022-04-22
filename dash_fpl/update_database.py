@@ -228,7 +228,7 @@ def format_shot_data(df, team_lst):
     df = df[df['h_team'].isin(team_lst)]
     df['X'] = (df['X']) * 100
     df['Y'] = (df['Y']) * 100
-    df.fillna("", inplace=True)
+    df.fillna("N/A", inplace=True)
     return df
 
 
@@ -250,6 +250,17 @@ def format_player_data(df):
     df['npxG'] = df['npxG'].astype('float64').round(2)
     df['xGChain'] = df['xGChain'].astype('float64').round(2)
     df['xGBuildup'] = df['xGBuildup'].astype('float64').round(2)
+
+    # Radar Plot Data
+    df['xG90'] = (df['xG'] / (df['time'] / 90)).round(2)
+    df['xA90'] = (df['xA'] / (df['time'] / 90)).round(2)
+    df['xGBuildup90'] = (df['xGBuildup'] / (df['time'] / 90)).round(2)
+    df['xGChain90'] = (df['xGChain'] / (df['time'] / 90)).round(2)
+    df['G90'] = (df['goals'] / (df['time'] / 90)).round(2)
+    df['A90'] = (df['assists'] / (df['time'] / 90)).round(2)
+
+
+
     #df['xG90'] = df['xG90'].astype('float64')
     #df['xG90'] = df['xG90'].round(2)
     #print(df.head())

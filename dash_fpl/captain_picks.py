@@ -8,27 +8,42 @@ pd.set_option('display.max_columns', None)
 
 # https://fantasy.premierleague.com/api/dream-team/8/ ----> highest scoring
 
-def optimal_captain(manager_id):
-    print(manager_id, 'inside ID')
-    a = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/")
-    at = a.json()
-    test1 = pd.DataFrame(at['elements'])
-    test1 = test1[['id', 'web_name']]
-    # print('a', a)
-    gameweek = 1
-    dataset = pd.DataFrame
+def multiply_by_2(dataframe):
+    captain = dataframe.loc[dataframe['multiplier'] == 2]
+    return captain
 
-    data = []
-    df = pd.DataFrame()
 
+def multiply_by_3(dataframe):
+    captain = dataframe.loc[dataframe['multiplier'] == 3]
+    return captain
+
+
+# TESTED
+def dataframe_col_to_list(dataframe):
+    captain_names = dataframe['element'].tolist()
+    return captain_names
+
+
+# TESTED
+def total_points_multiplier(dataframe):
+    return dataframe.total_points * dataframe.multiplier
+
+
+# TESTED
+def points_multiplier(dataframe):
+    return dataframe.points * 2
+
+
+def captain_points_difference(dataframe):
+    return dataframe['Points'] - dataframe['Optimal Points']
+
+
+def get_GW_captain_picks(manager_id, gameweek, df):
     while 1:
         r = requests.get(f"https://fantasy.premierleague.com/api/entry/{manager_id}/event/{gameweek}/picks/")
-        # print(r, 'while')
         if r.status_code == 404:
-            # print(r.json())
-            # print(gameweek, "404")
-            # print('HereLast', gameweek)
-            break
+            gameweek = 1  # reset gameweek to 1
+            return df, gameweek
         else:
             data = (json.loads(r.text))
             dataset = pd.DataFrame.from_dict(data['picks'])
@@ -36,72 +51,93 @@ def optimal_captain(manager_id):
                 cpt = dataset.loc[dataset['multiplier'] == 2]
             elif dataset['multiplier'].eq(3).any():
                 cpt = dataset.loc[dataset['multiplier'] == 3]
-
             df = pd.concat([df, cpt])
         gameweek += 1
-    df.index = np.arange(0, len(df))
-    # df.index.name = 'Gameweek'
 
-    col_one_list = df['element'].tolist()
-    print(col_one_list)
-    e = []
-    gw = 1
-    # print('HereLO')
-    # Merge the double gameweeks, i is list of user captains get score for each week
-    for i in col_one_list:
+
+def match_captain_pick_to_score(captains, captain_points, gameweek):
+    for i in captains:
 
         r5 = requests.get(f"https://fantasy.premierleague.com/api/element-summary/{i}/")
         test = (json.loads(r5.text))
         elements_df = pd.DataFrame(test['history'])
         elements_df = elements_df[['total_points', 'round']]
-        # print(elements_df.tail())
         aggregation_functions = {'total_points': 'sum', 'round': 'sum'}
         df_new = elements_df.groupby(elements_df['round']).aggregate(aggregation_functions)
-        # print(df_new.at[gw, 'total_points'])
-        # print(df_new, gw)
-        # print(gw, i)
-        # print(df_new)
+
         try:
-            e.append(df_new.at[gw, 'total_points'])
-            # print(e)
+            captain_points.append(df_new.at[gameweek, 'total_points'])
+            # print(captain_points)
         except KeyError:
             continue
-        gw += 1
-        if gw == len(col_one_list) + 1:
-            break
-    print(e)
-    df['total_points'] = pd.Series(e)
-    df.index = np.arange(1, len(df) + 1)
+        gameweek += 1
+        if gameweek == len(captains) + 1:
+            gameweek = 1
+            return captain_points, gameweek
 
-    gameweek = 1
 
-    temp_dataset = pd.DataFrame
-    tpdf = pd.DataFrame()
-
-    # Best Player each Week
-    print('HereLast')
+def get_GW_optimal_captains(topPlayerDf, gameweek):
     while 1:
         top_player_request = requests.get(f"https://fantasy.premierleague.com/api/dream-team/{gameweek}/")
         if top_player_request.status_code == 404:
             # print(gameweek, "404")
-            break
+            return topPlayerDf
         else:
             tp_data = (json.loads(top_player_request.text))
             temp_dataset = pd.DataFrame(tp_data['top_player'], index=[gameweek])
-            tpdf = pd.concat([tpdf, temp_dataset])
-
+            topPlayerDf = pd.concat([topPlayerDf, temp_dataset])
             gameweek += 1
 
-    tpdf.index.name = 'Gameweek'
-    df = df.join(tpdf)
-    df['total_points'] = df.total_points * df.multiplier
-    df['points'] = df.points * 2
-    df = df.drop(columns=['position', 'is_captain', 'is_vice_captain', 'multiplier'])
-    df['id'] = df['id'].map(test1.set_index('id')['web_name'])
-    df['element'] = df['element'].map(test1.set_index('id')['web_name'])
-    df = df.rename(
+
+def getGenericPlayerData():
+    requestGenericPlayerData = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/")
+    genericPLayerData = requestGenericPlayerData.json()
+    playerElementsTemp = pd.DataFrame(genericPLayerData['elements'])
+    playerElements = playerElementsTemp[['id', 'web_name']]
+    return playerElements
+
+
+# List to series to col
+def captain_points_to_col(captain_points):
+    return pd.Series(captain_points)
+
+
+def dataframe_col_rename(dataframe):
+    dataframe = dataframe.rename(
         columns={'element': 'Captain', 'total_points': 'Points', 'id': 'Optimal Pick', 'points': 'Optimal Points'})
-    df['Difference'] = df['Points'] - df['Optimal Points']
+    return dataframe
+
+
+# Test input a variable, expect a dataframe
+def optimal_captain(manager_id):
+    captain_points = []
+    playerElements = getGenericPlayerData()
+    gameweek = 1
+    df = pd.DataFrame()
+    optimalCaptainDf = pd.DataFrame()
+    df, gameweek = get_GW_captain_picks(manager_id, gameweek, df)
+    df.index = np.arange(0, len(df))
+
+    # Check data format here
+    captain_list = dataframe_col_to_list(df)
+
+    captain_points, gameweek = match_captain_pick_to_score(captain_list, captain_points, gameweek)
+    df['total_points'] = captain_points_to_col(captain_points)
+    df.index = np.arange(1, len(df) + 1)
+
+    optimalCaptainDf = get_GW_optimal_captains(optimalCaptainDf, gameweek)
+
+    optimalCaptainDf.index.name = 'Gameweek'
+    df = df.join(optimalCaptainDf)
+    # Test Here
+    df['total_points'] = total_points_multiplier(df)
+    # Test Here
+    df['points'] = points_multiplier(df)
+    df = df.drop(columns=['position', 'is_captain', 'is_vice_captain', 'multiplier'])
+    df['id'] = df['id'].map(playerElements.set_index('id')['web_name'])
+    df['element'] = df['element'].map(playerElements.set_index('id')['web_name'])
+    df = dataframe_col_rename(df)
+    df['Difference'] = captain_points_difference(df)
     df.index.name = 'Gameweek'
 
     # print(df)
