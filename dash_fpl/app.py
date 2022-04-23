@@ -44,16 +44,14 @@ tab_style = {
 tab_selected_style = {
     'borderTop': '1px solid #d6d6d6',
     'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#00ff85',#00ff85
+    'backgroundColor': '#00ff85',  # 00ff85
     'color': 'black',
     'padding': '6px'
 }
 
-
 yo = pd.read_sql_table('radar_data', con=db.engine)
 
 rdf = pd.DataFrame(yo)
-
 
 test_png = '/Users/brendanbaker/DashFPL/assets/Screenshot 2022-03-04 at 14.38.40.png'
 test_base64 = base64.b64encode(open(test_png, 'rb').read()).decode('ascii')
@@ -71,8 +69,6 @@ bubble_image = base64.b64encode(open(bubble_image_temp, 'rb').read()).decode('as
 pd.set_option('display.max_columns', 500)
 data = ['xG90', 'xA90', 'A90', 'xGBuildup90', 'G90', 'xG90']
 
-
-
 pdff = getPlayer()
 
 # see https://plotly.com/python/px-arguments/ for more options
@@ -86,7 +82,6 @@ pdf.loc[pdf['element_type'] == '3', 'element_type'] = 'Midfielder'
 pdf.loc[pdf['element_type'] == '4', 'element_type'] = 'Forward'
 pd.options.mode.chained_assignment = None
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
-
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
 test_pdf = final_pdf
@@ -108,7 +103,7 @@ dropdown = dbc.DropdownMenu(
 )
 DropdownApp = dbc.Container([
     dbc.Row([
-        dbc.Col(dcc.Dropdown(df['player'].unique(), id='player', ),
+        dbc.Col(dcc.Dropdown(df['player'].unique(), id='player', value='Mason Mount'),
                 width={'size': 4, "offset": 1, 'order': 0}
                 ),
 
@@ -128,10 +123,10 @@ DropdownApp = dbc.Container([
 
 DropdownApp1 = dbc.Container([
     dbc.Row([
-        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player1', value='Ziyech'),
+        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player1', value='Ziyech', clearable=False),
                 width={'size': 4, "offset": 0, 'order': 2}
                 ),
-        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player2', value='Ronaldo'),
+        dbc.Col(dcc.Dropdown(final_pdf['web_name'].unique(), id='player2', value='Ronaldo', clearable=False),
                 width={'size': 4, "offset": 1, 'order': 2}
                 ),
     ]),
@@ -144,10 +139,10 @@ DropdownApp1 = dbc.Container([
 
 DropdownApp2 = dbc.Container([
     dbc.Row([
-        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='firstPlayer', value='Bukayo Saka'),
+        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='firstPlayer', value='Bukayo Saka', clearable=False),
                 width={'size': 4, "offset": 0, 'order': 2}
                 ),
-        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='secondPlayer', value='Reece James'),
+        dbc.Col(dcc.Dropdown(rdf['player_name'].unique(), id='secondPlayer', value='Reece James', clearable=False),
                 width={'size': 4, "offset": 1, 'order': 2}
                 ),
     ]),
@@ -210,6 +205,7 @@ cardTwo = dbc.Card(
                     dbc.Modal(
                         [
                             dbc.ModalHeader("Player Gameweek Performance"),
+                            dbc.ModalBody('Note - Gaps represent a player has not participate in a given gameweek.'),
                             dbc.ModalBody(DropdownApp1),
                             dbc.ModalFooter(
                                 dbc.Button("Close", id="closetwo", className="ml-auto", color='danger')
@@ -334,34 +330,34 @@ navbar = dbc.NavbarSimple(
     ],
     brand="Fantasy Premier League Visualisations",
     brand_href="#",
-    color="#38003c",#38003c
+    color="#38003c",  # 38003c
     dark=True,
 )
 #####################################################################################
-#https://resources.premierleague.com/premierleague/photo/2018/11/14/a62ae4b3-12a5-46de-8908-308282fbff23/Rainbow-Laces-Captain-armband-v2.jpg
+# https://resources.premierleague.com/premierleague/photo/2018/11/14/a62ae4b3-12a5-46de-8908-308282fbff23/Rainbow-Laces-Captain-armband-v2.jpg
 
 viz_layout = html.Div([
     # dbc.Row(dbc.Col(navbar, width=12)),
     dbc.Row([
         dbc.Col(cardOne, xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 5, "offset": 1},
-                     lg={'size': 3, "offset": 1}),
+                lg={'size': 3, "offset": 1}),
 
         dbc.Col(cardThree, xs=12, sm=12, md=5, lg=3),
         dbc.Col(
-                [
-                    dbc.Row(
-                        cardTwo, style={'border': '1px solid'}
-                    ),
-                    dbc.Row(className='mb-4'),
-                    dbc.Row(
-                        cardFour, style={'border': '1px solid'}
-                    )
-                ],
-                xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 4, "offset": 0},
-                lg={'size': 4, "offset": 0},
-                #style={'border': '1px solid'}
-            )
-        ]
+            [
+                dbc.Row(
+                    cardTwo, style={'border': '1px solid'}
+                ),
+                dbc.Row(className='mb-4'),
+                dbc.Row(
+                    cardFour, style={'border': '1px solid'}
+                )
+            ],
+            xs={'size': 12, "offset": 0}, sm={'size': 12, "offset": 0}, md={'size': 4, "offset": 0},
+            lg={'size': 4, "offset": 0},
+            # style={'border': '1px solid'}
+        )
+    ]
     )
 
 ]),
@@ -586,11 +582,11 @@ def lineChart(player1, player2):
     gwdf2.loc[gwdf2['minutes'] == 0, 'total_points'] = None
 
     fig3.add_trace(go.Scatter(x=gwdf1['round'], y=gwdf1['total_points'],
-                             mode='lines',
-                             name=player1))
+                              mode='lines',
+                              name=player1))
     fig3.add_trace(go.Scatter(x=gwdf2['round'], y=gwdf2['total_points'],
-                             mode='lines',
-                             name=player2))
+                              mode='lines',
+                              name=player2))
 
     fig3.update_layout(
         title="Gameweek Player Data",
@@ -610,7 +606,7 @@ def lineChart(player1, player2):
 def update_graph(player, choice):
     dff = df[df['player'] == player]
 
-    print(dff)
+    # print(dff)
 
     if choice == 'all_values':
         dff = df[df['player'] == player]
@@ -618,15 +614,19 @@ def update_graph(player, choice):
     else:
         dff = dff[dff['result'] == choice]
 
+    dff = dff.rename(
+        columns={'player': 'Player', 'result': 'Result', 'situation': 'Situation',
+                 'player_assisted': 'Player Assisted'})
+
     try:
 
-        fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
-                          hover_data={"result": True, "situation": True, "player_assisted": True, 'X': False,
+        fig1 = px.scatter(dff, x="X", y="Y", color='Result', size_max=25, hover_name="Player",
+                          hover_data={"Result": True, "Situation": True, "Player Assisted": True, 'X': False,
                                       'Y': False}
                           , size='xG')
     except ValueError:
-        fig1 = px.scatter(dff, x="X", y="Y", color='result', size_max=25, hover_name="player",
-                          hover_data={"result": True, "situation": True, "player_assisted": True, 'X': False,
+        fig1 = px.scatter(dff, x="X", y="Y", color='Result', size_max=25, hover_name="Player",
+                          hover_data={"Result": True, "Situation": True, "Player Assisted": True, 'X': False,
                                       'Y': False}
                           , size='xG')
 
@@ -643,6 +643,15 @@ def update_graph(player, choice):
         visible=False,
         range=[0, 100]
     )
+
+    fig1.update_layout(
+        hoverlabel=dict(
+            # bgcolor="white",
+            font_size=11,
+            font_family="Arial"
+        )
+    )
+
     fig1.add_layout_image(
         source=pyLogo,
         xref="paper",
@@ -705,9 +714,9 @@ def toggle_modal(n1, n2, is_open):
     Input('firstPlayer', 'value'),
     Input('secondPlayer', 'value'))
 def radar_function(firstPlayer, secondPayer):
-
     df1_for_plot = pd.DataFrame(rdf[rdf['player_name'] == firstPlayer][data].iloc[0])
     df2_for_plot = pd.DataFrame(rdf[rdf['player_name'] == secondPayer][data].iloc[0])
+
 
     df1_for_plot.columns = ['score']
     df2_for_plot.columns = ['score']
@@ -776,9 +785,21 @@ def update_figure(selected_year):
     temp = test_pdf[
         (test_pdf['selected_by_percent'] >= selected_year[0]) & (test_pdf['selected_by_percent'] <= selected_year[1])]
 
-    fig = px.scatter(temp, x="selected_by_percent", y="total_points",
-                     size="now_cost", hover_name="web_name",
-                     size_max=35, color='element_type', text="web_name")
+    temp['now_cost'] = temp['now_cost'].astype('float64')
+    temp['now_cost'] = temp['now_cost'] / 10
+
+    temp = temp.rename(
+        columns={'web_name': 'Player', 'selected_by_percent': 'Ownership Percentage', 'total_points': 'Total Points',
+                 'element_type': 'Position',
+                 'now_cost': 'Cost'})
+    try:
+        fig = px.scatter(temp, x="Ownership Percentage", y="Total Points",
+                         size="Cost", hover_name="Player",
+                         size_max=35, color='Position', text="Player")
+    except ValueError:
+        fig = px.scatter(temp, x="Ownership Percentage", y="Total Points",
+                         size="Cost", hover_name="Player",
+                         size_max=35, color='Position', text="Player")
 
     fig.update_layout(transition_duration=500)
 
