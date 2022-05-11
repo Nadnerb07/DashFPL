@@ -23,6 +23,7 @@ def get_gameweek_history(player_id):
 
     # extract 'history' data from response into dataframe
     df = pd.json_normalize(r['history'])
+    #print(df.info())
     df = df[[
         'round',
         'total_points',

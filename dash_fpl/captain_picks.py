@@ -13,9 +13,11 @@ def multiply_by_2(dataframe):
     captain = dataframe.loc[dataframe['multiplier'] == 2]
     return captain
 
+
 # TODO
 def multiply_by_3(dataframe):
     captain = dataframe.loc[dataframe['multiplier'] == 3]
+    # print(type(captain), captain)
     return captain
 
 
@@ -57,6 +59,7 @@ def get_GW_captain_picks(manager_id, gameweek, df):
             df = pd.concat([df, cpt])
         gameweek += 1
 
+
 # TESTED
 def match_captain_pick_to_score(captains, captain_points, gameweek):
     for i in captains:
@@ -71,15 +74,12 @@ def match_captain_pick_to_score(captains, captain_points, gameweek):
         aggregation_functions = {'total_points': 'sum', 'round': 'sum'}
         df_new = elements_df.groupby(elements_df['round']).aggregate(aggregation_functions)
 
-        try:
-            captain_points.append(df_new.at[gameweek, 'total_points'])
-            # print(captain_points)
-        except KeyError:
-            continue
+        captain_points.append(df_new.at[gameweek, 'total_points'])
         gameweek += 1
         if gameweek == len(captains) + 1:
             gameweek = 1
             return captain_points, gameweek
+
 
 # TODO
 def get_GW_optimal_captains(topPlayerDf, gameweek):
@@ -94,6 +94,7 @@ def get_GW_optimal_captains(topPlayerDf, gameweek):
             topPlayerDf = pd.concat([topPlayerDf, temp_dataset])
             gameweek += 1
 
+
 # TODO
 def getGenericPlayerData():
     requestGenericPlayerData = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/")
@@ -102,16 +103,19 @@ def getGenericPlayerData():
     playerElements = playerElementsTemp[['id', 'web_name']]
     return playerElements
 
+
 # TODO
 # List to series to col
 def captain_points_to_col(captain_points):
     return pd.Series(captain_points)
+
 
 # TODO
 def dataframe_col_rename(dataframe):
     dataframe = dataframe.rename(
         columns={'element': 'Captain', 'total_points': 'Points', 'id': 'Optimal Pick', 'points': 'Optimal Points'})
     return dataframe
+
 
 # TODO
 # Test input a variable, expect a dataframe
@@ -146,7 +150,6 @@ def optimal_captain(manager_id):
     df['Difference'] = captain_points_difference(df)
     df.index.name = 'Gameweek'
 
-    # print(df)
     return df
 
 # optimal_captain(8931)

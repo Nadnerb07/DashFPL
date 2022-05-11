@@ -76,11 +76,10 @@ pdf.loc[pdf['element_type'] == '4', 'element_type'] = 'Forward'
 pdf["selected_by_percent"] = pd.to_numeric(pdf["selected_by_percent"], downcast="float")
 
 final_pdf = pdf.sort_values(by=['selected_by_percent'], ascending=False)
-test_pdf = final_pdf
+rangeSlider = final_pdf
 
 
 all = df['result'].unique()
-options = [{'label': x, 'value': x} for x in all]
 options = [{'label': x, 'value': x} for x in all]
 options.append({'label': 'Select All', 'value': "all"})
 
@@ -397,19 +396,16 @@ def captain_layout_function(captain_df):
 optimalCaptainTabComponents = html.Div(
     children=[
         dbc.Row(
-            className='mb-5',
-        ),
+            className='mb-5',),
         dbc.Row(
             dbc.Col(
                 html.H1("Optimal Captaincy History", className='text-center text-primary, mb-3'),
-                width={"size": 6, "offset": 3},
-            )
+                width={"size": 6, "offset": 3},)
         ),
         dbc.Row(
             dbc.Col(
                 html.H2("Enter Team ID below", className='text-center text-primary, mb-4'),
-                width={"size": 6, "offset": 3},
-            )
+                width={"size": 6, "offset": 3},)
         ),
         dbc.Row([
             dbc.Col([
@@ -424,7 +420,6 @@ optimalCaptainTabComponents = html.Div(
             dbc.Col([
                 dbc.Spinner(html.Div(id='output', children=[]), fullscreen=True,
                             spinner_style={"width": "10rem", "height": "10rem"}),
-
             ]),
         ]),
         dbc.Row([
@@ -457,7 +452,7 @@ invalidTeamIDAlert = html.Div(
 
 @app.callback([Output("output", "children"), Output("the_alert", "children")],
               [Input("loading-button", "n_clicks")], [State("input", "value")])
-def output_text(n_clicks, value):
+def captain_callback(n_clicks, value):
     if n_clicks:
         id = value
         manager_id = requests.get(f"https://fantasy.premierleague.com/api/entry/{id}/")
@@ -515,6 +510,7 @@ def lineChart(player1, player2):
 
     aggregation_functions = {'total_points': 'sum', 'round': 'sum', 'minutes': 'sum'}
     df_player1 = elements_df1.groupby(elements_df1['round']).aggregate(aggregation_functions)
+
     df_player2 = elements_df2.groupby(elements_df2['round']).aggregate(aggregation_functions)
 
     df_player1 = df_player1.drop(columns=['round'])
@@ -551,7 +547,7 @@ def lineChart(player1, player2):
     Output('shot-map', 'figure'),
     Input('player', 'value'),
     Input('choice', 'value'))
-def update_graph(player, choice):
+def shot_map_creation(player, choice):
     dff = df[df['player'] == player]
 
     if choice == 'all_values':
@@ -726,9 +722,10 @@ def radar_function(firstPlayer, secondPayer):
 @app.callback(
     Output('graph-with-slider', 'figure'),
     Input('year-slider', 'value'))
-def update_figure(selected_year):
-    temp = test_pdf[
-        (test_pdf['selected_by_percent'] >= selected_year[0]) & (test_pdf['selected_by_percent'] <= selected_year[1])]
+def effective_ownership(selected_percentage):
+    temp = rangeSlider[
+        (rangeSlider['selected_by_percent'] >= selected_percentage[0]) & (rangeSlider['selected_by_percent'] <=
+                                                                          selected_percentage[1])]
 
     temp['now_cost'] = temp['now_cost'].astype('float64')
     temp['now_cost'] = temp['now_cost'] / 10
